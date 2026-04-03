@@ -1,0 +1,40 @@
+[
+  {
+    "id": "0a0f6c6f-064c-4a8b-ba8f-9a38684840dd",
+    "title": "喜欢一个人是什么感觉？",
+    "description": "你是否对一个人在某个瞬间心动，那种感觉是什么样的呢？",
+    "comments": [],
+    "publishedAt": "2026-04-03T13:28:21.074Z",
+    "updatedAt": "2026-04-03T13:28:21.074Z"
+  },
+  {
+    "id": "topic-seed-1",
+    "title": "你最近一次真正被鼓舞到是什么时候？",
+    "description": "不管是生活里的小事、某句话、某个人，还是一次突然想通的时刻，都欢迎在这里留下你的答案。可以匿名，也可以署名。",
+    "publishedAt": "2026-04-03T12:00:00.000Z",
+    "updatedAt": "2026-04-03T13:27:24.240Z",
+    "comments": [
+      {
+        "id": "comment-seed-1",
+        "authorName": "匿名用户",
+        "isAnonymous": true,
+        "content": "最近一次被鼓舞，是看到有人在很普通的生活里依然认真对待自己的热爱。",
+        "createdAt": "2026-04-03T12:30:00.000Z"
+      },
+      {
+        "id": "comment-seed-2",
+        "authorName": "阿泽",
+        "isAnonymous": false,
+        "content": "我是在某个深夜刷到一句话：慢一点也没关系，但别停。那一刻突然轻松了很多。",
+        "createdAt": "2026-04-03T13:10:00.000Z"
+      },
+      {
+        "id": "08c6c6b3-03c4-462f-b1c8-5e972a11aaf2",
+        "authorName": "小顺子",
+        "isAnonymous": false,
+        "content": "去做你不敢做的事，见你不敢见的人，到后面你会发现不过如此。",
+        "createdAt": "2026-04-03T13:27:24.240Z"
+      }
+    ]
+  }
+]

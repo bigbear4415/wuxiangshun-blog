@@ -1,0 +1,174 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>博客后台 | 吴祥顺的个人博客</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Manrope:wght@400;500;700;800&display=swap"
+    rel="stylesheet"
+  >
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="admin-body">
+  <main class="admin-shell admin-shell-wide">
+    <section class="admin-panel" id="login-panel">
+      <div class="admin-header">
+        <div>
+          <p class="eyebrow">后台登录</p>
+          <h1>先输入密码，再进入内容管理</h1>
+          <p class="admin-text">登录后你可以管理文章、讨论话题，并查看前台展示效果。</p>
+        </div>
+        <a class="button button-secondary" href="/index.html">返回前台</a>
+      </div>
+
+      <form id="login-form" class="admin-form compact-form">
+        <label>
+          <span>后台密码</span>
+          <input name="password" type="password" placeholder="请输入后台密码" required>
+        </label>
+
+        <div class="admin-actions">
+          <button class="button button-primary" type="submit">登录后台</button>
+          <p id="login-message" class="admin-message" aria-live="polite"></p>
+        </div>
+      </form>
+    </section>
+
+    <section class="admin-layout hidden" id="admin-layout">
+      <section class="admin-panel">
+        <div class="admin-header">
+          <div>
+            <p class="eyebrow">文章管理</p>
+            <h1 id="editor-title">发布一篇新文章</h1>
+            <p class="admin-text">支持正文、图片和视频。发布或更新后，前台会自动收到最新内容。</p>
+          </div>
+          <div class="admin-top-actions">
+            <a class="button button-secondary" href="/index.html" target="_blank" rel="noreferrer">打开前台</a>
+            <button class="button button-secondary" id="logout-button" type="button">退出登录</button>
+          </div>
+        </div>
+
+        <form id="post-form" class="admin-form" enctype="multipart/form-data">
+          <input type="hidden" name="postId" value="">
+          <input type="hidden" name="keepImage" value="true">
+          <input type="hidden" name="keepVideo" value="true">
+
+          <label>
+            <span>文章标题</span>
+            <input name="title" type="text" placeholder="输入文章标题" required>
+          </label>
+
+          <label>
+            <span>文章分类</span>
+            <input name="category" type="text" placeholder="例如：设计 / 学习 / 生活" required>
+          </label>
+
+          <label>
+            <span>文章摘要</span>
+            <textarea name="excerpt" rows="3" placeholder="一句简洁摘要，用来展示在首页卡片里" required></textarea>
+          </label>
+
+          <label>
+            <span>文章正文</span>
+            <textarea name="content" rows="10" placeholder="写下正文内容" required></textarea>
+          </label>
+
+          <div class="admin-media-grid">
+            <label>
+              <span>封面图片</span>
+              <input name="image" type="file" accept="image/*">
+            </label>
+
+            <label>
+              <span>封面视频</span>
+              <input name="video" type="file" accept="video/*">
+            </label>
+          </div>
+
+          <div class="admin-current-media hidden" id="current-media">
+            <div class="media-preview-block hidden" id="current-image-block">
+              <p class="mini-title">当前图片</p>
+              <img id="current-image" class="media-preview-image" alt="当前文章图片">
+              <button class="button button-secondary button-small" id="remove-image-button" type="button">移除图片</button>
+            </div>
+
+            <div class="media-preview-block hidden" id="current-video-block">
+              <p class="mini-title">当前视频</p>
+              <video id="current-video" class="media-preview-video" controls preload="metadata"></video>
+              <button class="button button-secondary button-small" id="remove-video-button" type="button">移除视频</button>
+            </div>
+          </div>
+
+          <div class="admin-actions admin-actions-spread">
+            <div class="admin-actions">
+              <button class="button button-primary" id="submit-button" type="submit">发布文章</button>
+              <button class="button button-secondary hidden" id="cancel-edit-button" type="button">取消编辑</button>
+            </div>
+            <p id="admin-message" class="admin-message" aria-live="polite"></p>
+          </div>
+        </form>
+      </section>
+
+      <section class="admin-panel">
+        <div class="admin-header">
+          <div>
+            <p class="eyebrow">已发布文章</p>
+            <h2>可继续编辑、删除，也能直接查看前台效果</h2>
+          </div>
+        </div>
+        <div id="admin-posts" class="admin-posts"></div>
+      </section>
+    </section>
+
+    <section class="admin-layout hidden" id="topics-layout">
+      <section class="admin-panel">
+        <div class="admin-header">
+          <div>
+            <p class="eyebrow">话题讨论</p>
+            <h1 id="topic-editor-title">发布一个新话题</h1>
+            <p class="admin-text">发布后，前台访客可以匿名或署名参与留言讨论。</p>
+          </div>
+        </div>
+
+        <form id="topic-form" class="admin-form">
+          <input type="hidden" name="topicId" value="">
+
+          <label>
+            <span>话题标题</span>
+            <input name="title" type="text" placeholder="输入讨论话题标题" required>
+          </label>
+
+          <label>
+            <span>话题说明</span>
+            <textarea name="description" rows="6" placeholder="写下这个话题想让大家讨论什么" required></textarea>
+          </label>
+
+          <div class="admin-actions admin-actions-spread">
+            <div class="admin-actions">
+              <button class="button button-primary" id="topic-submit-button" type="submit">发布话题</button>
+              <button class="button button-secondary hidden" id="topic-cancel-edit-button" type="button">取消编辑</button>
+            </div>
+            <p id="topic-message" class="admin-message" aria-live="polite"></p>
+          </div>
+        </form>
+      </section>
+
+      <section class="admin-panel">
+        <div class="admin-header">
+          <div>
+            <p class="eyebrow">已发布话题</p>
+            <h2>你发布的话题会在前台讨论区直接显示</h2>
+          </div>
+        </div>
+        <div id="admin-topics" class="admin-posts"></div>
+      </section>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>`r`n  <script src="admin.js"></script>
+</body>
+</html>
+

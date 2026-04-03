@@ -1,0 +1,23 @@
+﻿{
+  "name": "wuxiangshun-blog",
+  "version": "1.0.0",
+  "description": "吴祥顺的个人博客，支持本地运行与 Vercel + Supabase 部署。",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "blog",
+    "vercel",
+    "supabase"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.4",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "multer": "^2.1.1"
+  }
+}
