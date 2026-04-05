@@ -35,6 +35,7 @@ let runtimeConfig = {
   supabaseStorageBucket: "blog-media"
 };
 let supabaseClient = null;
+const resumableUploadThresholdBytes = 6 * 1024 * 1024;
 
 const parseResponsePayload = async (response) => {
   const contentType = response.headers.get("content-type") || "";
@@ -326,6 +327,57 @@ const requestSignedUpload = async (file, folder) => {
   return result;
 };
 
+const getSupabaseProjectRef = () => {
+  if (!runtimeConfig.supabaseUrl) {
+    throw new Error("缺少 Supabase 项目地址，暂时无法上传媒体。");
+  }
+
+  const url = new URL(runtimeConfig.supabaseUrl);
+  const [projectRef] = url.hostname.split(".");
+
+  if (!projectRef) {
+    throw new Error("无法识别 Supabase 项目标识。");
+  }
+
+  return projectRef;
+};
+
+const uploadMediaWithTus = async (file, uploadInfo) => {
+  if (!window.tus?.Upload) {
+    throw new Error("页面未加载可恢复上传组件，暂时无法上传大文件。");
+  }
+
+  const projectRef = getSupabaseProjectRef();
+  const endpoint = `https://${projectRef}.storage.supabase.co/storage/v1/upload/resumable`;
+
+  return new Promise((resolve, reject) => {
+    const upload = new window.tus.Upload(file, {
+      endpoint,
+      chunkSize: 6 * 1024 * 1024,
+      retryDelays: [0, 1000, 3000, 5000],
+      uploadDataDuringCreation: true,
+      removeFingerprintOnSuccess: true,
+      metadata: {
+        bucketName: uploadInfo.bucket,
+        objectName: uploadInfo.path,
+        contentType: file.type || "application/octet-stream",
+        cacheControl: "3600"
+      },
+      headers: {
+        authorization: `Bearer ${runtimeConfig.supabaseAnonKey}`,
+        "x-signature": uploadInfo.token,
+        "x-upsert": "true"
+      },
+      onError: (error) => {
+        reject(new Error(error?.message || "视频上传失败，请稍后重试。"));
+      },
+      onSuccess: () => resolve(uploadInfo.publicUrl)
+    });
+
+    upload.start();
+  });
+};
+
 const uploadMediaToSupabase = async (file, folder) => {
   if (!file) {
     return "";
@@ -336,10 +388,18 @@ const uploadMediaToSupabase = async (file, folder) => {
   }
 
   const uploadInfo = await requestSignedUpload(file, folder);
-  const { error } = await supabaseClient.storage.from(uploadInfo.bucket).uploadToSignedUrl(uploadInfo.path, uploadInfo.token, file, {
-    contentType: file.type,
-    upsert: true
-  });
+  const shouldUseResumableUpload = file.size > resumableUploadThresholdBytes || file.type.startsWith("video/");
+
+  if (shouldUseResumableUpload) {
+    return uploadMediaWithTus(file, uploadInfo);
+  }
+
+  const { error } = await supabaseClient.storage
+    .from(uploadInfo.bucket)
+    .uploadToSignedUrl(uploadInfo.path, uploadInfo.token, file, {
+      contentType: file.type,
+      upsert: true
+    });
 
   if (error) {
     throw new Error(error.message || "上传媒体到云存储失败");
