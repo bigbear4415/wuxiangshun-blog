@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "wuxiangshun-blog",
   "version": "1.0.0",
   "description": "吴祥顺的个人博客，支持本地运行与 Vercel + Supabase 部署。",
