@@ -6,6 +6,7 @@ const featuredCard = document.querySelector("#featured-card");
 const introScreen = document.querySelector("#intro-screen");
 const introSkip = document.querySelector("#intro-skip");
 const introAudio = document.querySelector("#intro-audio");
+const musicToggle = document.querySelector("#music-toggle");
 const topicsList = document.querySelector("#topics-list");
 const discussionEmpty = document.querySelector("#discussion-empty");
 const discussionDetail = document.querySelector("#discussion-detail");
@@ -22,6 +23,8 @@ let currentTopicId = "";
 let cachedTopics = [];
 let runtimeConfig = { pollingIntervalMs: 15000 };
 let pollTimer = null;
+let introMusicReady = false;
+let introMusicEnabled = true;
 
 const bindAdaptiveVideoFrames = (root = document) => {
   root.querySelectorAll("video").forEach((video) => {
@@ -54,8 +57,6 @@ const openIntro = () => {
 
   document.body.classList.add("is-intro-active");
   let hasOpened = false;
-  let musicReady = false;
-
   const prepareIntroMusic = async () => {
     if (!introAudio) {
       return;
@@ -64,19 +65,25 @@ const openIntro = () => {
     try {
       const response = await fetch("/api/music");
       if (!response.ok) {
-        return;
+        throw new Error("music endpoint unavailable");
       }
 
       const tracks = await response.json();
       if (!tracks.length) {
-        return;
+        throw new Error("no deployed tracks");
       }
 
       introAudio.src = tracks[0].url;
-      musicReady = true;
+      introMusicReady = true;
     } catch {
-      // Ignore music loading failures.
+      const fallbackSrc = introAudio.dataset.fallbackSrc;
+      if (fallbackSrc) {
+        introAudio.src = fallbackSrc;
+        introMusicReady = true;
+      }
     }
+
+    syncMusicToggle();
   };
 
   const finish = () => {
@@ -93,7 +100,7 @@ const openIntro = () => {
   };
 
   const handleEnter = async () => {
-    if (musicReady && introAudio) {
+    if (introMusicReady && introMusicEnabled && introAudio) {
       try {
         introAudio.volume = 0.55;
         await introAudio.play();
@@ -108,6 +115,16 @@ const openIntro = () => {
   prepareIntroMusic();
   introSkip?.addEventListener("click", handleEnter);
   introScreen.addEventListener("click", handleEnter);
+};
+
+const syncMusicToggle = () => {
+  if (!musicToggle) {
+    return;
+  }
+
+  musicToggle.classList.toggle("hidden", !introMusicReady);
+  musicToggle.textContent = introMusicEnabled ? "音乐已开" : "音乐已关";
+  musicToggle.setAttribute("aria-pressed", introMusicEnabled ? "true" : "false");
 };
 
 const observeRevealItems = () => {
@@ -384,6 +401,7 @@ loadRuntimeConfig().then(() => {
   loadPosts();
   loadTopics();
   startPolling();
+  syncMusicToggle();
 });
 
 document.addEventListener("visibilitychange", () => {
@@ -465,4 +483,26 @@ form?.addEventListener("submit", (event) => {
 
   message.textContent = `订阅成功，${email} 已加入更新列表。`;
   form.reset();
+});
+
+musicToggle?.addEventListener("click", async () => {
+  if (!introAudio || !introMusicReady) {
+    return;
+  }
+
+  introMusicEnabled = !introMusicEnabled;
+  syncMusicToggle();
+
+  if (introMusicEnabled) {
+    try {
+      introAudio.volume = 0.55;
+      await introAudio.play();
+    } catch {
+      introMusicEnabled = false;
+      syncMusicToggle();
+    }
+    return;
+  }
+
+  introAudio.pause();
 });

@@ -30,7 +30,13 @@
     </div>
   </div>
 
-  <audio id="intro-audio" preload="auto" loop></audio>
+  <audio
+    id="intro-audio"
+    preload="auto"
+    loop
+    data-fallback-src="/assets/audio/the-fun-side-of-life-bireli-snow.mp3"
+  ></audio>
+  <button class="music-toggle hidden" id="music-toggle" type="button" aria-pressed="true">音乐已开</button>
 
   <div class="page-shell">
     <header class="site-header">
