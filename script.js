@@ -7,6 +7,10 @@ const introScreen = document.querySelector("#intro-screen");
 const introSkip = document.querySelector("#intro-skip");
 const introAudio = document.querySelector("#intro-audio");
 const musicToggle = document.querySelector("#music-toggle");
+const themeOrb = document.querySelector("#theme-orb");
+const themePanel = document.querySelector("#theme-panel");
+const themeHue = document.querySelector("#theme-hue");
+const themeReset = document.querySelector("#theme-reset");
 const topicsList = document.querySelector("#topics-list");
 const discussionEmpty = document.querySelector("#discussion-empty");
 const discussionDetail = document.querySelector("#discussion-detail");
@@ -25,6 +29,38 @@ let runtimeConfig = { pollingIntervalMs: 15000 };
 let pollTimer = null;
 let introMusicReady = false;
 let introMusicEnabled = true;
+let activeThemePreset = "warm";
+const rootStyle = document.documentElement.style;
+
+const themePresets = {
+  warm: { hue: 16, gold: 38, sage: 165, berry: 344 },
+  ocean: { hue: 202, gold: 44, sage: 183, berry: 326 },
+  berry: { hue: 344, gold: 26, sage: 166, berry: 336 },
+  sunset: { hue: 24, gold: 42, sage: 178, berry: 356 }
+};
+
+const moodThemes = {
+  tech: {
+    className: "mood-tech",
+    label: "技术冷调",
+    tags: ["技术", "理性", "结构"]
+  },
+  life: {
+    className: "mood-life",
+    label: "生活暖调",
+    tags: ["生活", "感受", "日常"]
+  },
+  craft: {
+    className: "mood-craft",
+    label: "创作绿调",
+    tags: ["创作", "作品", "过程"]
+  },
+  thought: {
+    className: "mood-thought",
+    label: "思考暮调",
+    tags: ["思考", "表达", "沉淀"]
+  }
+};
 
 const bindAdaptiveVideoFrames = (root = document) => {
   root.querySelectorAll("video").forEach((video) => {
@@ -48,6 +84,177 @@ const bindAdaptiveVideoFrames = (root = document) => {
       video.addEventListener("loadedmetadata", applyRatio, { once: true });
     }
   });
+};
+
+const getTimeTheme = () => {
+  const hour = new Date().getHours();
+
+  if (hour >= 5 && hour < 11) {
+    return "dawn";
+  }
+
+  if (hour >= 11 && hour < 17) {
+    return "day";
+  }
+
+  if (hour >= 17 && hour < 21) {
+    return "dusk";
+  }
+
+  return "night";
+};
+
+const applyTimeTheme = () => {
+  document.body.dataset.time = getTimeTheme();
+};
+
+const setThemeColors = ({ hue, gold, sage, berry }) => {
+  rootStyle.setProperty("--primary", `hsl(${hue} 58% 52%)`);
+  rootStyle.setProperty("--primary-deep", `hsl(${hue} 55% 33%)`);
+  rootStyle.setProperty("--primary-soft", `hsl(${hue + 12} 76% 72%)`);
+  rootStyle.setProperty("--gold", `hsl(${gold} 62% 56%)`);
+  rootStyle.setProperty("--gold-soft", `hsl(${gold} 80% 82%)`);
+  rootStyle.setProperty("--sage", `hsl(${sage} 26% 42%)`);
+  rootStyle.setProperty("--sage-soft", `hsl(${sage} 35% 84% / 0.22)`);
+  rootStyle.setProperty("--berry", `hsl(${berry} 42% 46%)`);
+  rootStyle.setProperty("--berry-soft", `hsl(${berry} 42% 46% / 0.14)`);
+};
+
+const applyThemePreset = (presetName) => {
+  const preset = themePresets[presetName] || themePresets.warm;
+  activeThemePreset = presetName;
+  themeHue && (themeHue.value = String(preset.hue));
+  setThemeColors(preset);
+  window.localStorage.setItem("blog-theme-preset", presetName);
+};
+
+const applyCustomHue = (hue) => {
+  const numericHue = Number(hue);
+  setThemeColors({
+    hue: numericHue,
+    gold: (numericHue + 30) % 360,
+    sage: (numericHue + 150) % 360,
+    berry: (numericHue + 330) % 360
+  });
+  window.localStorage.setItem("blog-theme-hue", String(numericHue));
+  window.localStorage.setItem("blog-theme-preset", "custom");
+  activeThemePreset = "custom";
+};
+
+const setupThemeOrb = () => {
+  if (!themeOrb || !themePanel) {
+    return;
+  }
+
+  const savedPreset = window.localStorage.getItem("blog-theme-preset");
+  const savedHue = window.localStorage.getItem("blog-theme-hue");
+
+  if (savedPreset && savedPreset !== "custom" && themePresets[savedPreset]) {
+    applyThemePreset(savedPreset);
+  } else if (savedHue) {
+    themeHue && (themeHue.value = savedHue);
+    applyCustomHue(savedHue);
+  } else {
+    applyThemePreset("warm");
+  }
+
+  const savedX = window.localStorage.getItem("theme-orb-x");
+  const savedY = window.localStorage.getItem("theme-orb-y");
+  if (savedX && savedY) {
+    themeOrb.style.left = `${savedX}px`;
+    themeOrb.style.top = `${savedY}px`;
+    themeOrb.style.right = "auto";
+    themeOrb.style.bottom = "auto";
+  }
+
+  let dragOffsetX = 0;
+  let dragOffsetY = 0;
+  let isDragging = false;
+  let didDrag = false;
+
+  const onPointerMove = (event) => {
+    if (!isDragging) {
+      return;
+    }
+
+    const x = Math.max(8, Math.min(window.innerWidth - themeOrb.offsetWidth - 8, event.clientX - dragOffsetX));
+    const y = Math.max(8, Math.min(window.innerHeight - themeOrb.offsetHeight - 8, event.clientY - dragOffsetY));
+    didDrag = true;
+    themeOrb.style.left = `${x}px`;
+    themeOrb.style.top = `${y}px`;
+    themeOrb.style.right = "auto";
+    themeOrb.style.bottom = "auto";
+    window.localStorage.setItem("theme-orb-x", String(Math.round(x)));
+    window.localStorage.setItem("theme-orb-y", String(Math.round(y)));
+  };
+
+  const stopDragging = () => {
+    isDragging = false;
+    themeOrb.classList.remove("is-dragging");
+    window.removeEventListener("pointermove", onPointerMove);
+    window.removeEventListener("pointerup", stopDragging);
+    window.setTimeout(() => {
+      didDrag = false;
+    }, 0);
+  };
+
+  themeOrb.addEventListener("pointerdown", (event) => {
+    if (event.pointerType === "mouse" && event.button !== 0) {
+      return;
+    }
+
+    isDragging = true;
+    const rect = themeOrb.getBoundingClientRect();
+    dragOffsetX = event.clientX - rect.left;
+    dragOffsetY = event.clientY - rect.top;
+    themeOrb.classList.add("is-dragging");
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", stopDragging);
+  });
+
+  themeOrb.addEventListener("click", () => {
+    if (themeOrb.classList.contains("is-dragging") || didDrag) {
+      return;
+    }
+
+    const isHidden = themePanel.classList.toggle("hidden");
+    themeOrb.setAttribute("aria-expanded", isHidden ? "false" : "true");
+  });
+
+  themeHue?.addEventListener("input", (event) => {
+    applyCustomHue(event.target.value);
+  });
+
+  themeReset?.addEventListener("click", () => {
+    applyThemePreset("warm");
+    window.localStorage.removeItem("blog-theme-hue");
+  });
+
+  document.querySelectorAll("[data-theme-preset]").forEach((button) => {
+    button.addEventListener("click", () => {
+      applyThemePreset(button.dataset.themePreset);
+      window.localStorage.removeItem("blog-theme-hue");
+    });
+  });
+};
+
+const inferPostMood = (post) => {
+  const content = `${post.category} ${post.title} ${post.excerpt} ${post.content}`.toLowerCase();
+  const hasAny = (keywords) => keywords.some((keyword) => content.includes(keyword));
+
+  if (hasAny(["代码", "编程", "开发", "技术", "算法", "系统", "api", "部署", "server", "debug"])) {
+    return moodThemes.tech;
+  }
+
+  if (hasAny(["设计", "作品", "创作", "灵感", "摄影", "视频", "表达", "品牌"])) {
+    return moodThemes.craft;
+  }
+
+  if (hasAny(["生活", "日常", "旅行", "朋友", "记录", "晚风", "咖啡", "电影", "成长"])) {
+    return moodThemes.life;
+  }
+
+  return moodThemes.thought;
 };
 
 const openIntro = () => {
@@ -183,10 +390,13 @@ const updateFeaturedCard = (post) => {
     return;
   }
 
+  const mood = inferPostMood(post);
+  featuredCard.className = `hero-card reveal ${mood.className}`;
   featuredCard.innerHTML = `
     <p class="hero-card-label">最新发布</p>
     <h2>${post.title}</h2>
     <p>${post.excerpt}</p>
+    <p class="hero-card-tone">${mood.label}</p>
     <a href="/post.html?id=${post.id}">查看详情</a>
   `;
 };
@@ -197,12 +407,16 @@ const createPostCard = (post) => {
   }
 
   const fragment = postTemplate.content.cloneNode(true);
+  const card = fragment.querySelector(".post-card");
   const media = fragment.querySelector(".post-media");
   const meta = fragment.querySelector(".post-meta");
   const title = fragment.querySelector("h3");
   const excerpt = fragment.querySelector(".post-excerpt");
   const body = fragment.querySelector(".post-body");
-  const link = fragment.querySelector(".post-link");
+  const links = fragment.querySelectorAll(".post-link");
+  const tone = fragment.querySelector(".post-tone");
+  const tags = fragment.querySelector(".post-tags");
+  const mood = inferPostMood(post);
 
   const mediaMarkup = createMediaMarkup(post);
   if (mediaMarkup) {
@@ -211,11 +425,23 @@ const createPostCard = (post) => {
     bindAdaptiveVideoFrames(media);
   }
 
+  card.classList.add(mood.className);
+  if (post.videoUrl) {
+    card.classList.add("has-video");
+  }
+
   meta.textContent = `${formatDate(post.publishedAt)} - ${post.category}`;
   title.textContent = post.title;
   excerpt.textContent = post.excerpt;
-  body.textContent = post.content.length > 88 ? `${post.content.slice(0, 88)}...` : post.content;
-  link.href = `/post.html?id=${post.id}`;
+  tone.textContent = mood.label;
+  body.textContent = post.content.length > 108 ? `${post.content.slice(0, 108)}...` : post.content;
+  tags.innerHTML = [post.category, ...mood.tags, post.videoUrl ? "视频" : post.imageUrl ? "图片" : "文字"]
+    .slice(0, 4)
+    .map((tag) => `<span class="post-tag">${tag}</span>`)
+    .join("");
+  links.forEach((link) => {
+    link.href = `/post.html?id=${post.id}`;
+  });
 
   postsContainer.appendChild(fragment);
 };
@@ -395,6 +621,8 @@ const startPolling = () => {
 };
 
 openIntro();
+applyTimeTheme();
+setupThemeOrb();
 observeRevealItems();
 
 loadRuntimeConfig().then(() => {

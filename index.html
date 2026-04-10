@@ -37,6 +37,22 @@
     data-fallback-src="/assets/audio/the-fun-side-of-life-bireli-snow.mp3"
   ></audio>
   <button class="music-toggle hidden" id="music-toggle" type="button" aria-pressed="true">音乐已开</button>
+  <button class="theme-orb" id="theme-orb" type="button" aria-expanded="false" aria-controls="theme-panel">色调</button>
+  <section class="theme-panel hidden" id="theme-panel" aria-label="界面色调调节">
+    <p class="mini-title">界面调色板</p>
+    <h3>拖动色彩球，或者自己定义今天的页面气质</h3>
+    <label class="theme-control">
+      <span>主色温度</span>
+      <input id="theme-hue" type="range" min="0" max="360" value="16">
+    </label>
+    <div class="theme-swatches" id="theme-swatches">
+      <button class="theme-swatch" data-theme-preset="warm" type="button">暖光</button>
+      <button class="theme-swatch" data-theme-preset="ocean" type="button">海盐</button>
+      <button class="theme-swatch" data-theme-preset="berry" type="button">莓果</button>
+      <button class="theme-swatch" data-theme-preset="sunset" type="button">暮色</button>
+    </div>
+    <button class="button button-secondary button-small" id="theme-reset" type="button">恢复默认</button>
+  </section>
 
   <div class="page-shell">
     <header class="site-header">
@@ -94,12 +110,21 @@
 
       <template id="post-template">
         <article class="post-card reveal">
-          <div class="post-media hidden"></div>
-          <p class="post-meta"></p>
-          <h3></h3>
-          <p class="post-excerpt"></p>
-          <div class="post-body"></div>
-          <a class="post-link" href="#">阅读全文</a>
+          <div class="post-card-3d">
+            <div class="post-face post-face-front">
+              <div class="post-media hidden"></div>
+              <p class="post-meta"></p>
+              <h3></h3>
+              <p class="post-excerpt"></p>
+              <a class="post-link post-link-front" href="#">阅读全文</a>
+            </div>
+            <div class="post-face post-face-back">
+              <p class="post-tone"></p>
+              <div class="post-tags"></div>
+              <div class="post-body"></div>
+              <a class="post-link post-link-back" href="#">进入全文</a>
+            </div>
+          </div>
         </article>
       </template>
 
