@@ -31,6 +31,7 @@ let introMusicReady = false;
 let introMusicEnabled = true;
 let activeThemePreset = "warm";
 const rootStyle = document.documentElement.style;
+const DETAIL_TRANSITION_KEY = "blog-detail-transition";
 
 const themePresets = {
   warm: { hue: 16, gold: 38, sage: 165, berry: 344 },
@@ -257,6 +258,33 @@ const inferPostMood = (post) => {
   return moodThemes.thought;
 };
 
+const rememberDetailTransition = (post, card) => {
+  try {
+    const payload = {
+      id: post.id,
+      moodClass: inferPostMood(post).className,
+      title: post.title,
+      excerpt: post.excerpt,
+      category: post.category,
+      timeTheme: getTimeTheme(),
+      activeThemePreset,
+      customHue: window.localStorage.getItem("blog-theme-hue")
+    };
+
+    if (card) {
+      const rect = card.getBoundingClientRect();
+      payload.origin = {
+        x: Math.round(rect.left + rect.width / 2),
+        y: Math.round(rect.top + rect.height / 2)
+      };
+    }
+
+    window.sessionStorage.setItem(DETAIL_TRANSITION_KEY, JSON.stringify(payload));
+  } catch {
+    // Ignore transition cache failures.
+  }
+};
+
 const openIntro = () => {
   if (!introScreen) {
     return;
@@ -417,6 +445,7 @@ const createPostCard = (post) => {
   const tone = fragment.querySelector(".post-tone");
   const tags = fragment.querySelector(".post-tags");
   const mood = inferPostMood(post);
+  const targetHref = `/post.html?id=${post.id}`;
 
   const mediaMarkup = createMediaMarkup(post);
   if (mediaMarkup) {
@@ -440,7 +469,19 @@ const createPostCard = (post) => {
     .map((tag) => `<span class="post-tag">${tag}</span>`)
     .join("");
   links.forEach((link) => {
-    link.href = `/post.html?id=${post.id}`;
+    link.href = targetHref;
+  });
+
+  card.addEventListener("click", (event) => {
+    const interactive = event.target.closest("a, button, video, input, textarea");
+    if (interactive && interactive.tagName !== "A") {
+      return;
+    }
+
+    rememberDetailTransition(post, card);
+    if (!interactive) {
+      window.location.href = targetHref;
+    }
   });
 
   postsContainer.appendChild(fragment);
@@ -733,4 +774,22 @@ musicToggle?.addEventListener("click", async () => {
   }
 
   introAudio.pause();
+});
+
+document.querySelectorAll(".post-link").forEach((link) => {
+  link.addEventListener("click", (event) => {
+    const card = event.target.closest(".post-card");
+    if (!card) {
+      return;
+    }
+
+    const title = card.querySelector("h3")?.textContent || "";
+    rememberDetailTransition({
+      id: new URL(event.currentTarget.href, window.location.origin).searchParams.get("id"),
+      title,
+      excerpt: card.querySelector(".post-excerpt")?.textContent || "",
+      category: card.querySelector(".post-meta")?.textContent || "",
+      content: ""
+    }, card);
+  });
 });
