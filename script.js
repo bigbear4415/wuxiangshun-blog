@@ -419,17 +419,20 @@ const updateFeaturedCard = (post) => {
   }
 
   const mood = inferPostMood(post);
-  featuredCard.className = `hero-card reveal ${mood.className}`;
+  const mediaMarkup = createMediaMarkup(post);
+  featuredCard.className = `featured-spotlight editorial-card reveal visible ${mood.className}`;
   featuredCard.innerHTML = `
     <p class="hero-card-label">最新发布</p>
     <h2>${post.title}</h2>
     <p>${post.excerpt}</p>
     <p class="hero-card-tone">${mood.label}</p>
+    ${mediaMarkup ? `<div class="post-media">${mediaMarkup}</div>` : ""}
     <a href="/post.html?id=${post.id}">查看详情</a>
   `;
+  bindAdaptiveVideoFrames(featuredCard);
 };
 
-const createPostCard = (post) => {
+const createPostCard = (post, index) => {
   if (!postTemplate || !postsContainer) {
     return;
   }
@@ -452,6 +455,10 @@ const createPostCard = (post) => {
     media.classList.remove("hidden");
     media.innerHTML = mediaMarkup;
     bindAdaptiveVideoFrames(media);
+  }
+
+  if (index === 0) {
+    card.classList.add("post-card--featured");
   }
 
   card.classList.add(mood.className);
@@ -506,7 +513,7 @@ const renderPosts = (posts) => {
   }
 
   updateFeaturedCard(posts[0]);
-  posts.forEach(createPostCard);
+  posts.forEach((post, index) => createPostCard(post, index));
   observeRevealItems();
   bindAdaptiveVideoFrames(postsContainer);
 };

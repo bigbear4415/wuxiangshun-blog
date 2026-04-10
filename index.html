@@ -1,17 +1,17 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>吴祥顺的个人博客</title>
-  <meta name="description" content="吴祥顺的个人博客，分享思考、生活记录、作品和灵感。">
+  <meta name="description" content="吴祥顺的个人博客，分享思考、作品、技术记录与生活观察。">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
     href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Manrope:wght@400;500;700;800&display=swap"
     rel="stylesheet"
   >
-  <link rel="stylesheet" href="styles.css?v=20260410b">
+  <link rel="stylesheet" href="styles.css?v=20260410c">
 </head>
 <body>
   <div class="intro-screen" id="intro-screen" aria-hidden="true">
@@ -25,7 +25,7 @@
       <p class="intro-kicker">Wu Xiangshun</p>
       <div class="intro-mark">WX</div>
       <h1 class="intro-title">吴祥顺的个人博客</h1>
-      <p class="intro-subtitle">记录想法、作品、生活片段，也记录正在发生的成长。</p>
+      <p class="intro-subtitle">把想法、作品和热爱，认真留在这个安静但不单薄的角落里。</p>
       <p class="intro-subtitle">点击屏幕，进入博客首页</p>
     </div>
   </div>
@@ -54,163 +54,183 @@
     <button class="button button-secondary button-small" id="theme-reset" type="button">恢复默认</button>
   </section>
 
-  <div class="page-shell">
-    <header class="site-header">
-      <a class="brand" href="/index.html">吴祥顺的个人博客</a>
-      <nav class="site-nav">
-        <a href="#journal">文章</a>
+  <header class="top-nav">
+    <div class="top-nav-inner">
+      <a class="nav-brand" href="/index.html">吴祥顺的个人博客</a>
+      <nav class="top-nav-links">
+        <a class="is-active" href="#journal">文章</a>
         <a href="#discussions">讨论</a>
         <a href="#about">关于</a>
         <a href="#newsletter">订阅</a>
         <a href="/admin.html">后台</a>
       </nav>
-    </header>
+    </div>
+  </header>
 
-    <main id="top">
-      <section class="hero">
-        <div class="hero-copy reveal">
-          <p class="eyebrow">个人博客与数字手记</p>
-          <h1>把思考、作品与热爱，认真地留在这个温暖又有力量的角落里。</h1>
-          <p class="hero-text">
-            这里是吴祥顺的个人博客。我会在这里记录成长轨迹，分享设计、编程、阅读与生活里的观察，
-            也会把值得回头看的作品、图片、视频和灵感慢慢沉淀下来。
-          </p>
-          <div class="hero-actions">
-            <a class="button button-primary" href="#journal">阅读最新文章</a>
-            <a class="button button-secondary" href="#discussions">进入讨论区</a>
-          </div>
+  <main class="editorial-main">
+    <section class="hero-editorial reveal">
+      <div class="hero-editorial-main">
+        <p class="signature-label">个人博客与数字手记</p>
+        <h1 class="hero-editorial-title">把思考、作品与热爱，认真地留在这个温暖又有力量的角落里。</h1>
+        <p class="hero-editorial-text">
+          这里是吴祥顺的个人博客。我会在这里记录成长轨迹，分享设计、编程、阅读与生活里的观察，
+          也会把值得回头看的作品、图片、视频和灵感慢慢沉淀下来。
+        </p>
+        <div class="hero-editorial-actions">
+          <a class="button button-primary" href="#journal">阅读最新文章</a>
+          <a class="button button-secondary" href="#discussions">进入讨论区</a>
         </div>
-
-        <aside class="hero-card reveal" id="featured-card">
+      </div>
+      <aside class="hero-editorial-side">
+        <p class="signature-label">最新发布</p>
+        <div class="featured-spotlight editorial-card reveal" id="featured-card">
           <p class="hero-card-label">最新发布</p>
           <h2>后台发布后，这里会自动展示最新文章</h2>
           <p>你可以写文章、上传图片和视频，前台会自动同步更新。</p>
           <a href="#journal">查看文章列表</a>
-        </aside>
-      </section>
-
-      <section class="highlight reveal">
-        <div>
-          <p class="eyebrow">现在支持</p>
-          <h2>一个更完整、更能长期使用的个人博客</h2>
         </div>
-        <ul class="highlight-list">
-          <li>后台登录后可以发布、编辑、删除文章。</li>
-          <li>支持给文章上传图片和视频，前台会直接展示。</li>
-          <li>新增讨论区，访客可以匿名或署名参与留言。</li>
-        </ul>
-      </section>
+      </aside>
+    </section>
 
-      <section class="section-heading reveal" id="journal">
-        <p class="eyebrow">最新文章</p>
-        <h2>最近的更新与记录</h2>
-      </section>
+    <section class="feature-band reveal">
+      <div class="feature-band-copy">
+        <p class="signature-label">现在支持</p>
+        <h2>一个更完整、也更适合长期使用的个人博客。</h2>
+      </div>
+      <ul class="feature-band-list">
+        <li>后台可以发布、编辑、删除文章，并直接同步前台。</li>
+        <li>支持上传图片和视频，让内容表达不再只有文字。</li>
+        <li>新增讨论区，访客可以匿名或署名参与留言。</li>
+      </ul>
+    </section>
 
-      <section class="posts-grid posts-grid-dynamic" id="posts-container" aria-live="polite"></section>
+    <section class="section-intro reveal" id="journal">
+      <div>
+        <p class="signature-label">Featured Articles</p>
+        <h2>精选文章</h2>
+      </div>
+      <a class="section-link" href="#newsletter">订阅更新</a>
+    </section>
 
-      <template id="post-template">
-        <article class="post-card reveal">
-          <div class="post-card-3d">
-            <div class="post-face post-face-front">
-              <div class="post-media hidden"></div>
+    <section class="editorial-posts-grid" id="posts-container" aria-live="polite"></section>
+
+    <template id="post-template">
+      <article class="post-card editorial-card reveal">
+        <div class="post-card-3d">
+          <div class="post-face post-face-front">
+            <div class="post-media hidden"></div>
+            <div class="post-card-content">
               <p class="post-meta"></p>
               <h3></h3>
               <p class="post-excerpt"></p>
               <a class="post-link post-link-front" href="#">阅读全文</a>
             </div>
-            <div class="post-face post-face-back">
-              <p class="post-tone"></p>
-              <div class="post-tags"></div>
-              <div class="post-body"></div>
-              <a class="post-link post-link-back" href="#">进入全文</a>
+          </div>
+          <div class="post-face post-face-back">
+            <p class="post-tone"></p>
+            <div class="post-tags"></div>
+            <div class="post-body"></div>
+            <a class="post-link post-link-back" href="#">进入全文</a>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <section class="section-intro reveal" id="discussions">
+      <div>
+        <p class="signature-label">Public Notes</p>
+        <h2>话题讨论</h2>
+      </div>
+      <p class="section-copy">欢迎匿名或者署名，聊聊你真正想说的话。</p>
+    </section>
+
+    <section class="discussion-layout editorial-layout reveal">
+      <div class="discussion-list" id="topics-list" aria-live="polite"></div>
+
+      <div class="discussion-panel">
+        <div class="discussion-empty" id="discussion-empty">
+          <p class="post-meta">还没有选中话题</p>
+          <h3>从左侧选择一个话题，开始参与讨论</h3>
+          <p>如果后台还没有发布话题，这里会在发布后自动出现。</p>
+        </div>
+
+        <div class="discussion-detail hidden" id="discussion-detail">
+          <p class="post-meta" id="discussion-meta"></p>
+          <h3 id="discussion-title"></h3>
+          <p class="discussion-description" id="discussion-description"></p>
+
+          <div class="comments-list" id="comments-list"></div>
+
+          <form class="comment-form" id="comment-form">
+            <label>
+              <span>你的昵称</span>
+              <input id="comment-author" name="authorName" type="text" placeholder="不匿名时显示的名字">
+            </label>
+
+            <label class="comment-anonymous-toggle">
+              <input id="comment-anonymous" name="isAnonymous" type="checkbox" checked>
+              <span>匿名留言</span>
+            </label>
+
+            <label>
+              <span>留言内容</span>
+              <textarea id="comment-content" name="content" rows="5" placeholder="写下你对这个话题的看法" required></textarea>
+            </label>
+
+            <div class="admin-actions admin-actions-spread">
+              <button class="button button-primary" type="submit">发布留言</button>
+              <p class="admin-message" id="comment-message" aria-live="polite"></p>
             </div>
-          </div>
-        </article>
-      </template>
-
-      <section class="section-heading reveal" id="discussions">
-        <p class="eyebrow">话题讨论</p>
-        <h2>欢迎匿名或署名，聊聊你真正想说的</h2>
-      </section>
-
-      <section class="discussion-layout reveal">
-        <div class="discussion-list" id="topics-list" aria-live="polite"></div>
-
-        <div class="discussion-panel" id="discussion-panel">
-          <div class="discussion-empty" id="discussion-empty">
-            <p class="post-meta">还没有选中话题</p>
-            <h3>从左侧选择一个话题，开始参与讨论</h3>
-            <p>如果后台还没有发布话题，这里会在发布后自动出现。</p>
-          </div>
-
-          <div class="discussion-detail hidden" id="discussion-detail">
-            <p class="post-meta" id="discussion-meta"></p>
-            <h3 id="discussion-title"></h3>
-            <p class="discussion-description" id="discussion-description"></p>
-
-            <div class="comments-list" id="comments-list"></div>
-
-            <form class="comment-form" id="comment-form">
-              <label>
-                <span>你的昵称</span>
-                <input id="comment-author" name="authorName" type="text" placeholder="不匿名时显示的名字">
-              </label>
-
-              <label class="comment-anonymous-toggle">
-                <input id="comment-anonymous" name="isAnonymous" type="checkbox" checked>
-                <span>匿名留言</span>
-              </label>
-
-              <label>
-                <span>留言内容</span>
-                <textarea id="comment-content" name="content" rows="5" placeholder="写下你对这个话题的看法" required></textarea>
-              </label>
-
-              <div class="admin-actions admin-actions-spread">
-                <button class="button button-primary" type="submit">发布留言</button>
-                <p class="admin-message" id="comment-message" aria-live="polite"></p>
-              </div>
-            </form>
-          </div>
+          </form>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section class="about-section reveal" id="about">
-        <div class="about-copy">
-          <p class="eyebrow">关于我</p>
-          <h2>你好，我是吴祥顺，一个喜欢创造、记录，也愿意把东西做得更完整一点的人。</h2>
-          <p>
-            这个博客是我的线上角落。我会在这里整理项目经验、记录学习过程、分享生活中的观察，
-            也让自己的表达慢慢长出更清晰的轮廓。希望你来到这里时，能看到真实、细腻，也有一点锋芒的内容。
-          </p>
-        </div>
-        <div class="about-panel">
-          <p class="mini-title">最近</p>
-          <ul>
-            <li>继续打磨个人网站与作品表达</li>
-            <li>用文字、图片和视频记录值得留下来的瞬间</li>
-            <li>让兴趣、学习和输出形成更稳定的循环</li>
-          </ul>
-        </div>
-      </section>
+    <section class="about-editorial reveal" id="about">
+      <div class="about-editorial-main editorial-card">
+        <p class="signature-label">About</p>
+        <h2>你好，我是吴祥顺，一个喜欢创造、记录，也愿意把事情做完整一点的人。</h2>
+        <p>
+          这个博客是我的线上角落。我会在这里整理项目经验、记录学习过程、分享生活中的观察，
+          也让自己的表达慢慢长出更清晰的轮廓。希望你来到这里时，能看到真实、细腻，也有一点锋芒的内容。
+        </p>
+      </div>
+      <aside class="about-editorial-side editorial-card">
+        <p class="signature-label">Recent Focus</p>
+        <ul class="about-editorial-list">
+          <li>继续打磨个人网站与作品表达</li>
+          <li>用文字、图片和视频记录值得留下来的瞬间</li>
+          <li>让兴趣、学习和输出形成更稳定的循环</li>
+        </ul>
+      </aside>
+    </section>
 
-      <section class="newsletter reveal" id="newsletter">
-        <div>
-          <p class="eyebrow">保持联系</p>
-          <h2>把新文章直接送到你的邮箱。</h2>
-          <p>有新内容发布时，我会发一封简短邮件，偶尔也会分享一些值得收藏的链接。</p>
-        </div>
+    <section class="newsletter-editorial reveal" id="newsletter">
+      <div class="newsletter-copy">
+        <p class="signature-label">Subscribe to the Quiet</p>
+        <h2>把新文章直接送到你的邮箱。</h2>
+        <p>有新内容发布时，我会发一封简短邮件，偶尔也会分享一些值得收藏的链接。</p>
+      </div>
+      <form class="newsletter-form">
+        <label class="sr-only" for="email">邮箱地址</label>
+        <input id="email" name="email" type="email" placeholder="请输入你的邮箱">
+        <button class="button button-primary" type="submit">立即订阅</button>
+      </form>
+      <p class="form-message" aria-live="polite"></p>
+    </section>
+  </main>
 
-        <form class="newsletter-form">
-          <label class="sr-only" for="email">邮箱地址</label>
-          <input id="email" name="email" type="email" placeholder="请输入你的邮箱">
-          <button type="submit">立即订阅</button>
-        </form>
-        <p class="form-message" aria-live="polite"></p>
-      </section>
-    </main>
-  </div>
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div class="footer-copy">© 2026 吴祥顺的个人博客 · 记录、思考、创造。</div>
+      <div class="footer-links">
+        <a href="#journal">文章</a>
+        <a href="#newsletter">订阅</a>
+        <a href="/admin.html">后台</a>
+      </div>
+    </div>
+  </footer>
 
-  <script src="script.js?v=20260410b"></script>
+  <script src="script.js?v=20260410c"></script>
 </body>
 </html>
