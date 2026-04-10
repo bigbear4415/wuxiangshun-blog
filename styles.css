@@ -96,9 +96,9 @@ body[data-time="dusk"] {
 }
 
 body[data-time="night"] {
-  --surface: rgba(26, 28, 48, 0.72);
-  --surface-strong: rgba(28, 31, 56, 0.92);
-  --surface-tint: rgba(31, 35, 63, 0.8);
+  --surface: rgba(31, 35, 63, 0.8);
+  --surface-strong: rgba(26, 30, 54, 0.94);
+  --surface-tint: rgba(31, 35, 63, 0.84);
   --ink: #f4efe8;
   --muted: #c0b9c8;
   --line: rgba(216, 205, 255, 0.12);
@@ -109,6 +109,110 @@ body[data-time="night"] {
     radial-gradient(circle at 82% 12%, rgba(152, 98, 203, 0.2), transparent 20%),
     radial-gradient(circle at 20% 84%, rgba(93, 186, 193, 0.1), transparent 18%),
     linear-gradient(180deg, #131829 0%, #1d2036 44%, #272641 100%);
+}
+
+body[data-time="night"] .hero-copy,
+body[data-time="night"] .hero-card,
+body[data-time="night"] .highlight,
+body[data-time="night"] .post-card,
+body[data-time="night"] .about-section,
+body[data-time="night"] .newsletter,
+body[data-time="night"] .post-detail-card,
+body[data-time="night"] .admin-panel,
+body[data-time="night"] .discussion-list,
+body[data-time="night"] .discussion-panel,
+body[data-time="night"] .topic-card,
+body[data-time="night"] .theme-panel {
+  background:
+    linear-gradient(180deg, rgba(36, 41, 72, 0.94), rgba(24, 28, 52, 0.9)) !important;
+  border-color: rgba(214, 200, 255, 0.14);
+  box-shadow: 0 28px 90px rgba(10, 12, 25, 0.42);
+}
+
+body[data-time="night"] .hero-copy::before {
+  background:
+    radial-gradient(circle at 20% 18%, rgba(113, 141, 245, 0.22), transparent 18%),
+    radial-gradient(circle at 78% 18%, rgba(92, 191, 196, 0.16), transparent 20%);
+}
+
+body[data-time="night"] .hero-copy::after,
+body[data-time="night"] .hero-card::after,
+body[data-time="night"] .newsletter::after {
+  opacity: 0.55;
+}
+
+body[data-time="night"] .brand,
+body[data-time="night"] .site-nav a,
+body[data-time="night"] .hero-copy h1,
+body[data-time="night"] .hero-card h2,
+body[data-time="night"] .section-heading h2,
+body[data-time="night"] .highlight h2,
+body[data-time="night"] .about-copy h2,
+body[data-time="night"] .newsletter h2,
+body[data-time="night"] .post-card h3,
+body[data-time="night"] .discussion-detail h3,
+body[data-time="night"] .detail-title,
+body[data-time="night"] .theme-panel h3 {
+  color: #f8f5ff;
+}
+
+body[data-time="night"] .hero-text,
+body[data-time="night"] .newsletter p,
+body[data-time="night"] .about-copy p,
+body[data-time="night"] .post-card p,
+body[data-time="night"] .hero-card p,
+body[data-time="night"] .highlight-list,
+body[data-time="night"] .form-message,
+body[data-time="night"] .admin-text,
+body[data-time="night"] .admin-message,
+body[data-time="night"] .admin-post-card p,
+body[data-time="night"] .detail-content,
+body[data-time="night"] .detail-excerpt,
+body[data-time="night"] .topic-card p,
+body[data-time="night"] .discussion-description,
+body[data-time="night"] .comment-card p,
+body[data-time="night"] .discussion-empty p,
+body[data-time="night"] .about-panel ul {
+  color: #cfd3e8;
+}
+
+body[data-time="night"] .eyebrow,
+body[data-time="night"] .post-meta,
+body[data-time="night"] .mini-title,
+body[data-time="night"] .hero-card-label,
+body[data-time="night"] .post-tone,
+body[data-time="night"] .hero-card-tone {
+  color: #f3c89c !important;
+}
+
+body[data-time="night"] .button-secondary,
+body[data-time="night"] .theme-swatch,
+body[data-time="night"] .music-toggle {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8f5ff;
+  border-color: rgba(229, 220, 255, 0.16);
+}
+
+body[data-time="night"] .newsletter-form input,
+body[data-time="night"] .admin-form input,
+body[data-time="night"] .admin-form textarea,
+body[data-time="night"] .comment-form input,
+body[data-time="night"] .comment-form textarea {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8f5ff;
+  border-color: rgba(229, 220, 255, 0.14);
+}
+
+body[data-time="night"] .newsletter-form input::placeholder,
+body[data-time="night"] .admin-form input::placeholder,
+body[data-time="night"] .admin-form textarea::placeholder,
+body[data-time="night"] .comment-form input::placeholder,
+body[data-time="night"] .comment-form textarea::placeholder {
+  color: rgba(229, 220, 255, 0.5);
+}
+
+body[data-time="night"] .post-tag {
+  color: #ffd6a7 !important;
 }
 
 .hidden {
@@ -499,7 +603,7 @@ body[data-time="night"] {
   padding: 3rem;
   border-radius: calc(var(--radius-lg) + 8px);
   background:
-    linear-gradient(145deg, rgba(255, 250, 244, 0.94), rgba(250, 239, 226, 0.82)),
+    linear-gradient(145deg, rgba(255, 248, 237, 0.9), rgba(243, 229, 212, 0.74)),
     var(--surface);
 }
 
@@ -645,7 +749,7 @@ body[data-time="night"] {
 .hero-card {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(180deg, rgba(255, 247, 238, 0.95), rgba(247, 231, 214, 0.82));
+  background: linear-gradient(180deg, rgba(252, 243, 233, 0.9), rgba(239, 224, 205, 0.76));
 }
 
 .hero-card::after {
@@ -676,7 +780,7 @@ body[data-time="night"] {
   gap: 1rem;
   margin-bottom: 2.5rem;
   background:
-    linear-gradient(120deg, rgba(255, 244, 232, 0.92), rgba(243, 226, 207, 0.8)),
+    linear-gradient(120deg, rgba(250, 236, 220, 0.88), rgba(235, 216, 195, 0.74)),
     radial-gradient(circle at 90% 30%, rgba(211, 154, 77, 0.18), transparent 26%);
   box-shadow: var(--shadow-strong);
 }
@@ -717,7 +821,7 @@ body[data-time="night"] {
 .post-card,
 .topic-card {
   transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
-  background: linear-gradient(180deg, rgba(255, 252, 248, 0.96), rgba(248, 239, 229, 0.78));
+  background: linear-gradient(180deg, rgba(252, 246, 239, 0.92), rgba(240, 228, 215, 0.74));
   transform-style: preserve-3d;
 }
 
@@ -908,12 +1012,12 @@ body[data-time="night"] {
 .discussion-list {
   display: grid;
   gap: 1rem;
-  background: linear-gradient(180deg, rgba(255, 250, 242, 0.95), rgba(248, 237, 227, 0.82));
+  background: linear-gradient(180deg, rgba(252, 244, 235, 0.9), rgba(239, 228, 217, 0.76));
 }
 
 .discussion-panel {
   min-height: 420px;
-  background: linear-gradient(180deg, rgba(255, 251, 245, 0.95), rgba(244, 233, 222, 0.84));
+  background: linear-gradient(180deg, rgba(250, 242, 233, 0.9), rgba(238, 226, 214, 0.78));
 }
 
 .topic-card {
@@ -1007,7 +1111,7 @@ body[data-time="night"] {
 
 .newsletter {
   background:
-    linear-gradient(135deg, rgba(255, 243, 231, 0.92), rgba(244, 227, 209, 0.82)),
+    linear-gradient(135deg, rgba(250, 237, 223, 0.88), rgba(237, 219, 199, 0.76)),
     radial-gradient(circle at 88% 18%, rgba(164, 70, 83, 0.14), transparent 22%);
   position: relative;
   overflow: hidden;
