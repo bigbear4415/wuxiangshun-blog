@@ -234,5 +234,23 @@ const loadPost = async () => {
   }
 };
 
+// ── 阅读进度条 Reading Progress Bar ─────────────────────
+const setupReadingProgress = () => {
+  const bar = document.querySelector("#read-progress-bar");
+  if (!bar) return;
+
+  const update = () => {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop || document.body.scrollTop;
+    const total = doc.scrollHeight - doc.clientHeight;
+    bar.style.width = total > 0 ? `${(scrolled / total) * 100}%` : "0%";
+  };
+
+  window.addEventListener("scroll", update, { passive: true });
+  update();
+};
+
 applySavedTheme();
-loadPost();
+loadPost().then(() => {
+  setupReadingProgress();
+});

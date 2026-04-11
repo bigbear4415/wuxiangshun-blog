@@ -23,6 +23,110 @@ const commentAuthor = document.querySelector("#comment-author");
 const commentAnonymous = document.querySelector("#comment-anonymous");
 const commentMessage = document.querySelector("#comment-message");
 
+// ── Toast 通知系统 ─────────────────────────────────────────
+const toastContainer = document.querySelector("#toast-container");
+
+const showToast = (text, type = "info") => {
+  if (!toastContainer) return;
+  const icons = { success: "✓", error: "✕", info: "·" };
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.innerHTML = `<span class="toast-icon">${icons[type] || icons.info}</span><span>${text}</span>`;
+  toastContainer.appendChild(toast);
+
+  const dismiss = () => {
+    toast.classList.add("is-exiting");
+    toast.addEventListener("animationend", () => toast.remove(), { once: true });
+  };
+  const timer = window.setTimeout(dismiss, 3400);
+  toast.addEventListener("click", () => { window.clearTimeout(timer); dismiss(); });
+};
+
+// ── 骨架屏 Skeleton Loading ────────────────────────────────
+const renderSkeleton = () => {
+  if (!postsContainer) return;
+  const lines = (specs) =>
+    specs.map(([h, w]) =>
+      `<div class="skeleton-line" style="height:${h};width:${w || "100%"}"></div>`
+    ).join("");
+
+  postsContainer.innerHTML = Array.from({ length: 3 }, (_, i) => `
+    <article class="skeleton-card${i === 0 ? " post-card--featured" : ""}">
+      ${lines([["0.68rem","55%"],["1.9rem","80%"],["1.7rem","65%"],["1rem","100%"],["1rem","90%"],["0.68rem","40%"]])}
+    </article>
+  `).join("");
+};
+
+// ── 预计阅读时长 Reading Time ─────────────────────────────
+const calcReadingTime = (text) => {
+  const mins = Math.max(1, Math.ceil(text.length / 350));
+  return `约 ${mins} 分钟`;
+};
+
+// ── 汉堡菜单 Hamburger Menu ───────────────────────────────
+const setupHamburger = () => {
+  const hamburger = document.querySelector("#nav-hamburger");
+  const navLinks = document.querySelector("#top-nav-links");
+  const overlay = document.querySelector("#nav-overlay");
+  if (!hamburger || !navLinks) return;
+
+  const toggle = (open) => {
+    hamburger.classList.toggle("is-open", open);
+    navLinks.classList.toggle("is-open", open);
+    overlay?.classList.toggle("is-open", open);
+    hamburger.setAttribute("aria-expanded", open ? "true" : "false");
+    document.body.style.overflow = open ? "hidden" : "";
+  };
+
+  hamburger.addEventListener("click", () => {
+    toggle(!navLinks.classList.contains("is-open"));
+  });
+  overlay?.addEventListener("click", () => toggle(false));
+  navLinks.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", () => toggle(false));
+  });
+};
+
+// ── 滚动高亮导航 Active Nav on Scroll ────────────────────
+const setupNavHighlight = () => {
+  const sections = document.querySelectorAll("section[id]");
+  const navLinks = document.querySelectorAll(".top-nav-links a[href^='#']");
+  if (!sections.length || !navLinks.length) return;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        navLinks.forEach((link) => {
+          link.classList.toggle(
+            "is-active",
+            link.getAttribute("href") === `#${entry.target.id}`
+          );
+        });
+      });
+    },
+    { rootMargin: "-15% 0px -65% 0px", threshold: 0 }
+  );
+
+  sections.forEach((section) => observer.observe(section));
+};
+
+// ── 返回顶部 Back to Top ──────────────────────────────────
+const setupBackToTop = () => {
+  const btn = document.querySelector("#back-to-top");
+  if (!btn) return;
+
+  window.addEventListener(
+    "scroll",
+    () => { btn.classList.toggle("is-visible", window.scrollY > 600); },
+    { passive: true }
+  );
+
+  btn.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+};
+
 let currentTopicId = "";
 let cachedTopics = [];
 let runtimeConfig = { pollingIntervalMs: 15000 };
@@ -466,7 +570,7 @@ const createPostCard = (post, index) => {
     card.classList.add("has-video");
   }
 
-  meta.textContent = `${formatDate(post.publishedAt)} - ${post.category}`;
+  meta.textContent = `${formatDate(post.publishedAt)} · ${post.category} · ${calcReadingTime(post.content)}`;
   title.textContent = post.title;
   excerpt.textContent = post.excerpt;
   tone.textContent = mood.label;
@@ -603,6 +707,8 @@ const loadPosts = async () => {
     return;
   }
 
+  renderSkeleton();
+
   try {
     const response = await fetch("/api/posts");
     if (!response.ok) {
@@ -671,6 +777,9 @@ const startPolling = () => {
 openIntro();
 applyTimeTheme();
 setupThemeOrb();
+setupHamburger();
+setupNavHighlight();
+setupBackToTop();
 observeRevealItems();
 
 loadRuntimeConfig().then(() => {
@@ -715,7 +824,7 @@ commentForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   if (!currentTopicId) {
-    commentMessage.textContent = "请先选择一个讨论话题。";
+    showToast("请先选择一个讨论话题", "error");
     return;
   }
 
@@ -737,13 +846,13 @@ commentForm?.addEventListener("submit", async (event) => {
       throw new Error(result.message || "留言失败");
     }
 
-    commentMessage.textContent = "留言成功，讨论区已经收到你的内容。";
+    showToast("留言成功，已发布到讨论区 ✓", "success");
     commentForm.reset();
     commentAnonymous.checked = true;
     commentAnonymous.dispatchEvent(new Event("change"));
     await loadTopics();
   } catch (error) {
-    commentMessage.textContent = error.message;
+    showToast(error.message || "留言失败，请稍后重试", "error");
   }
 });
 
@@ -753,11 +862,11 @@ form?.addEventListener("submit", (event) => {
   const email = emailInput.value.trim();
 
   if (!email) {
-    message.textContent = "请先输入你的邮箱地址。";
+    showToast("请先输入你的邮箱地址", "error");
     return;
   }
 
-  message.textContent = `订阅成功，${email} 已加入更新列表。`;
+  showToast(`订阅成功，已加入更新列表 ✓`, "success");
   form.reset();
 });
 
