@@ -111,6 +111,34 @@ const setupNavHighlight = () => {
   sections.forEach((section) => observer.observe(section));
 };
 
+// ── 隐藏后台入口 Secret Admin Access ─────────────────────
+const setupSecretAdmin = () => {
+  const footerCopy = document.querySelector("#footer-copy");
+  if (!footerCopy) return;
+
+  let clickCount = 0;
+  let resetTimer = null;
+
+  footerCopy.style.cursor = "default";
+  footerCopy.addEventListener("click", () => {
+    clickCount++;
+    window.clearTimeout(resetTimer);
+    resetTimer = window.setTimeout(() => { clickCount = 0; }, 1800);
+    if (clickCount >= 5) {
+      clickCount = 0;
+      window.location.href = "/admin.html";
+    }
+  });
+
+  // Keyboard shortcut: Ctrl+Shift+A
+  document.addEventListener("keydown", (e) => {
+    if (e.ctrlKey && e.shiftKey && e.key === "A") {
+      e.preventDefault();
+      window.location.href = "/admin.html";
+    }
+  });
+};
+
 // ── 返回顶部 Back to Top ──────────────────────────────────
 const setupBackToTop = () => {
   const btn = document.querySelector("#back-to-top");
@@ -780,6 +808,7 @@ setupThemeOrb();
 setupHamburger();
 setupNavHighlight();
 setupBackToTop();
+setupSecretAdmin();
 observeRevealItems();
 
 loadRuntimeConfig().then(() => {

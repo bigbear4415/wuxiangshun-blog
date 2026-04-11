@@ -217,11 +217,54 @@ const loadPost = async () => {
       ${createMediaMarkup(result)}
       <div class="detail-content">${result.content.replace(/\n/g, "<br>")}</div>
       <div class="detail-actions">
-        <a class="button button-secondary" href="/index.html">返回首页</a>
-        <a class="button button-primary" href="/admin.html">进入后台</a>
+        <a class="button button-secondary" href="/index.html">← 返回首页</a>
+        <button class="post-like-btn" id="post-like-btn" type="button" data-post-id="${result.id}">
+          <span class="like-icon">♡</span>
+          <span class="like-count" id="like-count">…</span>
+        </button>
       </div>
+      <section class="post-comments-section" id="post-comments-section">
+        <div class="post-comments-header">
+          <h2 class="post-comments-title">留言</h2>
+          <span class="post-comments-count" id="post-comments-count"></span>
+        </div>
+        <div class="post-comments-list" id="post-comments-list">
+          <p class="post-comments-loading">加载中…</p>
+        </div>
+        <form class="post-comment-form" id="post-comment-form">
+          <div class="comment-mode-row">
+            <label class="comment-mode-option">
+              <input type="radio" name="comment-mode" value="anon" checked>
+              <span>匿名</span>
+            </label>
+            <label class="comment-mode-option">
+              <input type="radio" name="comment-mode" value="named">
+              <span>实名</span>
+            </label>
+          </div>
+          <input
+            class="post-comment-author hidden"
+            id="post-comment-author"
+            type="text"
+            placeholder="你的昵称（必填）"
+            autocomplete="nickname"
+          >
+          <textarea
+            class="post-comment-content"
+            id="post-comment-content"
+            rows="3"
+            placeholder="说点什么……"
+            required
+          ></textarea>
+          <div class="post-comment-submit-row">
+            <button class="button button-primary button-small" type="submit">发布留言</button>
+          </div>
+        </form>
+      </section>
     `;
     bindAdaptiveVideoFrames(postDetail);
+    setupLikeButton(result.id);
+    setupPostComments(result.id);
   } catch (error) {
     postDetail.innerHTML = `
       <p class="post-meta">加载失败</p>
@@ -232,6 +275,182 @@ const loadPost = async () => {
       </div>
     `;
   }
+};
+
+// ── 点赞 Like Button ─────────────────────────────────────
+const setupLikeButton = async (postId) => {
+  const btn = document.querySelector("#post-like-btn");
+  const countEl = document.querySelector("#like-count");
+  if (!btn || !countEl) return;
+
+  const LIKED_KEY = "blog-liked-posts";
+  const getLikedSet = () => {
+    try { return new Set(JSON.parse(window.localStorage.getItem(LIKED_KEY) || "[]")); }
+    catch { return new Set(); }
+  };
+  const saveLikedSet = (set) => {
+    window.localStorage.setItem(LIKED_KEY, JSON.stringify([...set]));
+  };
+
+  // Load current count
+  try {
+    const res = await fetch(`/api/posts/${postId}/likes`);
+    const data = await res.json();
+    countEl.textContent = data.likes || 0;
+  } catch {
+    countEl.textContent = "0";
+  }
+
+  // Restore liked state
+  const liked = getLikedSet();
+  if (liked.has(postId)) {
+    btn.classList.add("is-liked");
+    btn.querySelector(".like-icon").textContent = "♥";
+  }
+
+  // Particle burst helper
+  const burstParticles = () => {
+    const emojis = ["✨", "💖", "⭐", "🌸", "💫"];
+    for (let i = 0; i < 7; i++) {
+      const p = document.createElement("span");
+      p.className = "like-particle";
+      p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      const angle = (i / 7) * 360;
+      const dist = 38 + Math.random() * 24;
+      const dx = Math.round(Math.cos((angle * Math.PI) / 180) * dist);
+      const dy = Math.round(Math.sin((angle * Math.PI) / 180) * dist);
+      p.style.setProperty("--dx", `${dx}px`);
+      p.style.setProperty("--dy", `${dy}px`);
+      p.style.left = "50%";
+      p.style.top = "50%";
+      btn.appendChild(p);
+      p.addEventListener("animationend", () => p.remove(), { once: true });
+    }
+  };
+
+  btn.addEventListener("click", async () => {
+    const liked = getLikedSet();
+    if (liked.has(postId)) return; // already liked
+
+    // Animate
+    btn.classList.add("is-liked", "like-burst");
+    btn.querySelector(".like-icon").textContent = "♥";
+    burstParticles();
+    window.setTimeout(() => btn.classList.remove("like-burst"), 500);
+
+    // Persist locally
+    liked.add(postId);
+    saveLikedSet(liked);
+
+    // Call API
+    try {
+      const res = await fetch(`/api/posts/${postId}/like`, { method: "POST" });
+      const data = await res.json();
+      countEl.textContent = data.likes ?? countEl.textContent;
+    } catch {
+      countEl.textContent = String(Number(countEl.textContent) + 1);
+    }
+  });
+};
+
+// ── 文章评论 Post Comments ────────────────────────────────
+const formatCommentDate = (dateString) => {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat("zh-CN", {
+    month: "long", day: "numeric",
+    hour: "2-digit", minute: "2-digit"
+  }).format(date);
+};
+
+const setupPostComments = async (postId) => {
+  const listEl = document.querySelector("#post-comments-list");
+  const countEl = document.querySelector("#post-comments-count");
+  const form = document.querySelector("#post-comment-form");
+  const authorInput = document.querySelector("#post-comment-author");
+  const contentInput = document.querySelector("#post-comment-content");
+  const modeRadios = document.querySelectorAll("input[name='comment-mode']");
+  if (!listEl || !form) return;
+
+  // Mode toggle: show/hide author field
+  modeRadios.forEach((radio) => {
+    radio.addEventListener("change", () => {
+      const isAnon = document.querySelector("input[name='comment-mode']:checked")?.value === "anon";
+      authorInput.classList.toggle("hidden", isAnon);
+      if (isAnon) authorInput.value = "";
+    });
+  });
+
+  const renderComments = (comments) => {
+    if (countEl) countEl.textContent = `${comments.length} 条留言`;
+    if (!comments.length) {
+      listEl.innerHTML = `<p class="post-comments-empty">还没有留言，来说第一句话吧。</p>`;
+      return;
+    }
+    listEl.innerHTML = comments.map((c) => `
+      <article class="post-comment-card">
+        <div class="post-comment-meta">
+          <strong class="post-comment-author-name">${c.isAnonymous ? "匿名读者" : c.authorName}</strong>
+          <span class="post-comment-time">${formatCommentDate(c.createdAt)}</span>
+        </div>
+        <p class="post-comment-body">${c.content.replace(/\n/g, "<br>")}</p>
+      </article>
+    `).join("");
+  };
+
+  // Load comments
+  const loadComments = async () => {
+    try {
+      const res = await fetch(`/api/posts/${postId}/comments`);
+      if (!res.ok) throw new Error();
+      renderComments(await res.json());
+    } catch {
+      listEl.innerHTML = `<p class="post-comments-empty">评论加载失败，请刷新重试。</p>`;
+    }
+  };
+
+  await loadComments();
+
+  // Submit
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const isAnon = document.querySelector("input[name='comment-mode']:checked")?.value === "anon";
+    const author = authorInput.value.trim();
+    const content = contentInput.value.trim();
+
+    if (!isAnon && !author) {
+      contentInput.setCustomValidity("");
+      authorInput.focus();
+      return;
+    }
+
+    const submitBtn = form.querySelector("button[type='submit']");
+    submitBtn.disabled = true;
+    submitBtn.textContent = "发布中…";
+
+    try {
+      const res = await fetch(`/api/posts/${postId}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content, isAnonymous: isAnon, authorName: author })
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message || "发布失败");
+
+      form.reset();
+      // Re-check anon (reset unchecks radio group)
+      document.querySelector("input[name='comment-mode'][value='anon']").checked = true;
+      authorInput.classList.add("hidden");
+
+      await loadComments();
+      // Scroll to newest comment
+      listEl.lastElementChild?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    } catch (err) {
+      alert(err.message || "提交评论失败，请稍后重试");
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "发布留言";
+    }
+  });
 };
 
 // ── 阅读进度条 Reading Progress Bar ─────────────────────

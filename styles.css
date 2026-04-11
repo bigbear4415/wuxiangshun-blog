@@ -2109,6 +2109,258 @@ body[data-time="night"] .back-to-top {
 }
 
 /* ──────────────────────────────────────────
+   点赞按钮 Like Button
+   ────────────────────────────────────────── */
+.post-like-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.78rem 1.35rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--muted);
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.96rem;
+  cursor: pointer;
+  transition: transform 200ms ease, border-color 220ms ease, background 220ms ease, color 220ms ease;
+  overflow: visible;
+  backdrop-filter: blur(8px);
+}
+
+.post-like-btn:hover {
+  transform: translateY(-2px);
+  border-color: rgba(220, 80, 110, 0.22);
+}
+
+.post-like-btn.is-liked {
+  color: #d94f6e;
+  border-color: rgba(217, 79, 110, 0.3);
+  background: rgba(217, 79, 110, 0.07);
+}
+
+body[data-time="night"] .post-like-btn {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(216, 205, 255, 0.14);
+  color: #cfd3e8;
+}
+
+body[data-time="night"] .post-like-btn.is-liked {
+  color: #f08ca8;
+  border-color: rgba(240, 140, 168, 0.28);
+  background: rgba(240, 140, 168, 0.09);
+}
+
+.like-icon {
+  font-size: 1.15rem;
+  display: inline-block;
+  line-height: 1;
+}
+
+@keyframes like-bounce {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.7) rotate(-12deg); }
+  55%  { transform: scale(0.82) rotate(6deg); }
+  75%  { transform: scale(1.15) rotate(-3deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+.post-like-btn.like-burst .like-icon {
+  animation: like-bounce 480ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+}
+
+.like-particle {
+  position: absolute;
+  pointer-events: none;
+  font-size: 0.8rem;
+  transform-origin: center;
+  margin-left: -0.4rem;
+  margin-top: -0.4rem;
+  z-index: 10;
+  animation: like-particle-fly 580ms ease forwards;
+}
+
+@keyframes like-particle-fly {
+  0%   { opacity: 1; transform: translate(0, 0) scale(1); }
+  60%  { opacity: 0.85; }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.3); }
+}
+
+/* ──────────────────────────────────────────
+   文章评论区 Post Comments Section
+   ────────────────────────────────────────── */
+.post-comments-section {
+  margin-top: 3rem;
+  padding-top: 2.2rem;
+  border-top: 1px solid var(--line);
+}
+
+.post-comments-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.post-comments-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-family: "Fraunces", serif;
+}
+
+.post-comments-count {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--primary-deep);
+}
+
+.post-comments-list {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.8rem;
+}
+
+.post-comments-loading,
+.post-comments-empty {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.post-comment-card {
+  padding: 1.1rem 1.3rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: linear-gradient(135deg, rgba(255, 251, 246, 0.95), rgba(250, 241, 232, 0.88));
+}
+
+body[data-time="night"] .post-comment-card {
+  background: linear-gradient(135deg, rgba(28, 32, 56, 0.95), rgba(22, 26, 48, 0.9));
+  border-color: rgba(216, 205, 255, 0.1);
+}
+
+.post-comment-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.post-comment-author-name {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.post-comment-time {
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.post-comment-body {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.78;
+  font-size: 0.97rem;
+}
+
+.post-comment-form {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1.5rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255, 252, 248, 0.88), rgba(247, 238, 228, 0.78));
+}
+
+body[data-time="night"] .post-comment-form {
+  background: linear-gradient(180deg, rgba(22, 26, 46, 0.92), rgba(18, 22, 40, 0.88));
+  border-color: rgba(216, 205, 255, 0.1);
+}
+
+.comment-mode-row {
+  display: flex;
+  gap: 1.4rem;
+  flex-wrap: wrap;
+}
+
+.comment-mode-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 700;
+  font-size: 0.94rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.comment-mode-option input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.post-comment-author,
+.post-comment-content {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.96rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  box-sizing: border-box;
+  transition: border-color 180ms ease;
+}
+
+.post-comment-author.hidden {
+  display: none;
+}
+
+.post-comment-author::placeholder,
+.post-comment-content::placeholder {
+  color: #9c7c68;
+}
+
+.post-comment-author:focus,
+.post-comment-content:focus {
+  outline: 2px solid rgba(203, 93, 59, 0.24);
+  border-color: rgba(203, 93, 59, 0.4);
+}
+
+.post-comment-content {
+  resize: vertical;
+  min-height: 88px;
+}
+
+body[data-time="night"] .post-comment-author,
+body[data-time="night"] .post-comment-content {
+  background: rgba(255, 255, 255, 0.07);
+  color: #f4efe8;
+  border-color: rgba(216, 205, 255, 0.14);
+}
+
+body[data-time="night"] .post-comment-author::placeholder,
+body[data-time="night"] .post-comment-content::placeholder {
+  color: rgba(229, 220, 255, 0.4);
+}
+
+.post-comment-submit-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ──────────────────────────────────────────
    主题切换过渡 Theme Transition Smoothing
    ────────────────────────────────────────── */
 .nav-brand,
