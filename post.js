@@ -258,6 +258,7 @@ const loadPost = async () => {
           ></textarea>
           <div class="post-comment-submit-row">
             <button class="button button-primary button-small" type="submit">发布留言</button>
+            <p class="post-comment-error hidden" id="post-comment-error"></p>
           </div>
         </form>
       </section>
@@ -295,8 +296,12 @@ const setupLikeButton = async (postId) => {
   // Load current count
   try {
     const res = await fetch(`/api/posts/${postId}/likes`);
-    const data = await res.json();
-    countEl.textContent = data.likes || 0;
+    if (res.ok) {
+      const data = await res.json();
+      countEl.textContent = typeof data.likes === "number" ? data.likes : 0;
+    } else {
+      countEl.textContent = "0";
+    }
   } catch {
     countEl.textContent = "0";
   }
@@ -345,8 +350,12 @@ const setupLikeButton = async (postId) => {
     // Call API
     try {
       const res = await fetch(`/api/posts/${postId}/like`, { method: "POST" });
-      const data = await res.json();
-      countEl.textContent = data.likes ?? countEl.textContent;
+      if (res.ok) {
+        try {
+          const data = await res.json();
+          if (typeof data.likes === "number") countEl.textContent = data.likes;
+        } catch { /* non-JSON, keep optimistic count */ }
+      }
     } catch {
       countEl.textContent = String(Number(countEl.textContent) + 1);
     }
@@ -427,14 +436,18 @@ const setupPostComments = async (postId) => {
     submitBtn.disabled = true;
     submitBtn.textContent = "发布中…";
 
+    const errorEl = document.querySelector("#post-comment-error");
+    if (errorEl) { errorEl.textContent = ""; errorEl.classList.add("hidden"); }
+
     try {
       const res = await fetch(`/api/posts/${postId}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content, isAnonymous: isAnon, authorName: author })
       });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.message || "发布失败");
+      let result = {};
+      try { result = await res.json(); } catch { /* non-JSON response */ }
+      if (!res.ok) throw new Error(result.message || "提交评论失败，请检查服务是否正常运行");
 
       form.reset();
       // Re-check anon (reset unchecks radio group)
@@ -445,7 +458,10 @@ const setupPostComments = async (postId) => {
       // Scroll to newest comment
       listEl.lastElementChild?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     } catch (err) {
-      alert(err.message || "提交评论失败，请稍后重试");
+      if (errorEl) {
+        errorEl.textContent = err.message || "提交评论失败，请稍后重试";
+        errorEl.classList.remove("hidden");
+      }
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = "发布留言";

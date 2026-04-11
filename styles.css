@@ -2357,7 +2357,22 @@ body[data-time="night"] .post-comment-content::placeholder {
 
 .post-comment-submit-row {
   display: flex;
+  align-items: center;
+  gap: 0.75rem;
   justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.post-comment-error {
+  font-size: 0.82rem;
+  color: #c0392b;
+  margin: 0;
+  flex: 1;
+  text-align: left;
+}
+
+[data-time="night"] .post-comment-error {
+  color: #ff7675;
 }
 
 /* ──────────────────────────────────────────
