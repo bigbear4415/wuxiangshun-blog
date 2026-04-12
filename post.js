@@ -337,6 +337,9 @@ const setupLikeButton = async (postId) => {
     const liked = getLikedSet();
     if (liked.has(postId)) return; // already liked
 
+    const optimisticCount = Number(countEl.textContent) || 0;
+    countEl.textContent = String(optimisticCount + 1);
+
     // Animate
     btn.classList.add("is-liked", "like-burst");
     btn.querySelector(".like-icon").textContent = "♥";
@@ -354,10 +357,12 @@ const setupLikeButton = async (postId) => {
         try {
           const data = await res.json();
           if (typeof data.likes === "number") countEl.textContent = data.likes;
-        } catch { /* non-JSON, keep optimistic count */ }
+        } catch {
+          // Keep optimistic count when the response body is empty or non-JSON.
+        }
       }
     } catch {
-      countEl.textContent = String(Number(countEl.textContent) + 1);
+      // Keep optimistic count when the request fails after the UI has already responded.
     }
   });
 };
@@ -427,7 +432,11 @@ const setupPostComments = async (postId) => {
     const content = contentInput.value.trim();
 
     if (!isAnon && !author) {
-      contentInput.setCustomValidity("");
+      const errorEl = document.querySelector("#post-comment-error");
+      if (errorEl) {
+        errorEl.textContent = "实名留言请先填写昵称。";
+        errorEl.classList.remove("hidden");
+      }
       authorInput.focus();
       return;
     }
