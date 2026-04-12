@@ -1526,6 +1526,34 @@ body[data-time="night"] .feature-band {
   line-height: 1.9;
 }
 
+.admin-helper-card {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.4rem;
+  padding: 1.4rem 1.5rem;
+  border-radius: var(--radius-md);
+  border: 1px dashed rgba(110, 65, 38, 0.18);
+  background: linear-gradient(180deg, rgba(250, 242, 233, 0.82), rgba(241, 231, 219, 0.74));
+}
+
+.admin-helper-card h2 {
+  margin: 0.45rem 0 0;
+  font-size: 1.45rem;
+  line-height: 1.16;
+}
+
+.admin-helper-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--muted);
+  line-height: 1.85;
+}
+
+body[data-time="night"] .admin-helper-card {
+  border-color: rgba(216, 205, 255, 0.14);
+  background: linear-gradient(180deg, rgba(29, 34, 60, 0.9), rgba(21, 26, 47, 0.86));
+}
+
 .section-intro {
   display: flex;
   align-items: end;
