@@ -186,8 +186,7 @@ body[data-time="night"] .hero-card-tone {
 }
 
 body[data-time="night"] .button-secondary,
-body[data-time="night"] .theme-swatch,
-body[data-time="night"] .music-toggle {
+body[data-time="night"] .theme-swatch {
   background: rgba(255, 255, 255, 0.08);
   color: #f8f5ff;
   border-color: rgba(229, 220, 255, 0.16);
@@ -404,26 +403,287 @@ body[data-time="night"] .post-tag {
   cursor: pointer;
 }
 
-.music-toggle {
+/* ──────────────────────────────────────────
+   音乐播放器 Music Widget
+   ────────────────────────────────────────── */
+
+@keyframes disc-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes music-dropdown-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── 外层容器 ─────────────────────────────── */
+.music-widget {
   position: fixed;
   right: 1.2rem;
   bottom: 1.2rem;
-  z-index: 70;
-  min-height: 2.9rem;
-  padding: 0.75rem 1.05rem;
-  border: 1px solid rgba(128, 77, 46, 0.16);
-  border-radius: var(--radius-sm);
-  background: rgba(255, 248, 240, 0.92);
-  color: var(--ink);
-  font: inherit;
-  font-weight: 800;
-  box-shadow: 0 18px 45px rgba(103, 63, 35, 0.14);
-  cursor: pointer;
-  backdrop-filter: blur(12px);
+  z-index: 75;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
 }
 
-.music-toggle:hover {
+/* ── 播放按钮 ─────────────────────────────── */
+.music-play-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.62rem 1.1rem 0.62rem 0.8rem;
+  border: 1px solid rgba(128, 77, 46, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 248, 240, 0.94);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 8px 32px rgba(103, 63, 35, 0.16);
+  transition: background 180ms ease, box-shadow 180ms ease, transform 150ms ease;
+  white-space: nowrap;
+  max-width: 180px;
+}
+
+.music-play-btn:hover {
+  background: rgba(255, 244, 230, 0.98);
+  box-shadow: 0 12px 40px rgba(103, 63, 35, 0.22);
   transform: translateY(-2px);
+}
+
+/* ── 黑胶碟包裹层 ─────────────────────────── */
+.music-disc-wrap {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 34%, #555, #111 40%, #000 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  overflow: hidden;
+}
+
+.music-disc-wrap::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #f0e8d8 30%, #c8b89a);
+  box-shadow: 0 0 0 1.5px rgba(0,0,0,0.25);
+}
+
+.music-disc {
+  font-size: 0;        /* hide text — use CSS ring instead */
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  border-radius: 50%;
+  background:
+    repeating-radial-gradient(
+      circle at center,
+      transparent 0px,
+      transparent 2px,
+      rgba(255,255,255,0.04) 2px,
+      rgba(255,255,255,0.04) 3px
+    );
+}
+
+.music-disc.is-spinning {
+  animation: disc-spin 3s linear infinite;
+}
+
+/* ── 曲目名标签 ───────────────────────────── */
+.music-play-label {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.83rem;
+}
+
+/* ── 下拉菜单 ─────────────────────────────── */
+.music-dropdown {
+  width: 240px;
+  border-radius: 16px;
+  border: 1px solid rgba(128, 77, 46, 0.14);
+  background: rgba(255, 249, 241, 0.97);
+  backdrop-filter: blur(18px);
+  box-shadow:
+    0 20px 60px rgba(80, 45, 20, 0.18),
+    0 2px 8px rgba(80, 45, 20, 0.08);
+  padding: 0.8rem 0.6rem 0.6rem;
+  display: none;
+  flex-direction: column;
+  gap: 0.3rem;
+  transform-origin: bottom right;
+}
+
+/* 悬停在整个 widget 时弹出 */
+.music-widget:hover .music-dropdown {
+  display: flex;
+  animation: music-dropdown-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.music-dropdown-title {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--muted);
+  padding: 0 0.5rem 0.45rem;
+  margin: 0;
+  border-bottom: 1px solid var(--line);
+  letter-spacing: 0.03em;
+}
+
+/* ── 曲目列表 ─────────────────────────────── */
+.music-track-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 0.2rem 0;
+}
+
+.music-track-list::-webkit-scrollbar { width: 4px; }
+.music-track-list::-webkit-scrollbar-track { background: transparent; }
+.music-track-list::-webkit-scrollbar-thumb { background: rgba(128,77,46,0.2); border-radius: 4px; }
+
+.music-track-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.86rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.music-track-item:hover {
+  background: rgba(203, 93, 59, 0.08);
+  color: var(--primary);
+}
+
+.music-track-item.is-active {
+  background: rgba(203, 93, 59, 0.1);
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.music-track-icon {
+  font-size: 0.78rem;
+  flex-shrink: 0;
+  width: 14px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.music-track-item.is-active .music-track-icon {
+  color: var(--primary);
+  animation: disc-spin 2s linear infinite;
+}
+
+.music-track-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.music-track-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.music-track-empty,
+.music-track-loading {
+  font-size: 0.84rem;
+  color: var(--muted);
+  padding: 0.6rem 0.5rem;
+  margin: 0;
+}
+
+/* ── 夜间模式 ─────────────────────────────── */
+body[data-time="night"] .music-play-btn {
+  background: rgba(24, 20, 44, 0.92);
+  border-color: rgba(160, 130, 255, 0.2);
+  color: #e8e0ff;
+  box-shadow: 0 8px 32px rgba(10, 8, 30, 0.45);
+}
+
+body[data-time="night"] .music-play-btn:hover {
+  background: rgba(36, 30, 60, 0.97);
+  box-shadow: 0 12px 40px rgba(10, 8, 30, 0.55);
+}
+
+body[data-time="night"] .music-dropdown {
+  background: rgba(24, 20, 44, 0.97);
+  border-color: rgba(160, 130, 255, 0.16);
+  box-shadow:
+    0 20px 60px rgba(10, 8, 30, 0.5),
+    0 2px 8px rgba(10, 8, 30, 0.3);
+}
+
+body[data-time="night"] .music-dropdown-title {
+  color: rgba(216, 205, 255, 0.5);
+  border-bottom-color: rgba(216, 205, 255, 0.1);
+}
+
+body[data-time="night"] .music-track-item {
+  color: rgba(228, 218, 255, 0.85);
+}
+
+body[data-time="night"] .music-track-item:hover {
+  background: rgba(140, 100, 255, 0.14);
+  color: #c8b5ff;
+}
+
+body[data-time="night"] .music-track-item.is-active {
+  background: rgba(140, 100, 255, 0.18);
+  color: #c8b5ff;
+}
+
+body[data-time="night"] .music-track-icon { color: rgba(216, 205, 255, 0.4); }
+body[data-time="night"] .music-track-item.is-active .music-track-icon { color: #a98dff; }
+
+body[data-time="night"] .music-track-badge {
+  background: #7c5ccc;
+}
+
+/* ── 移动端：向上展开调整 ─────────────────── */
+@media (max-width: 640px) {
+  .music-widget {
+    right: 0.8rem;
+    bottom: 0.8rem;
+  }
+
+  .music-dropdown {
+    width: 200px;
+  }
+
+  .music-play-label {
+    max-width: 80px;
+  }
 }
 
 .theme-orb {
@@ -710,8 +970,7 @@ body[data-time="night"] .post-tag {
 
 .button:hover,
 .post-link:hover,
-.hero-card a:hover,
-.topic-card:hover {
+.hero-card a:hover {
   transform: translateY(-2px);
 }
 
@@ -820,13 +1079,15 @@ body[data-time="night"] .post-tag {
 
 .post-card,
 .topic-card {
-  transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
   background: linear-gradient(180deg, rgba(252, 246, 239, 0.92), rgba(240, 228, 215, 0.74));
+}
+
+.post-card {
+  transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
   transform-style: preserve-3d;
 }
 
-.post-card:hover,
-.topic-card.is-active {
+.post-card:hover {
   transform: translateY(-10px) rotateX(4deg);
   border-color: rgba(164, 70, 83, 0.22);
   box-shadow: 0 38px 85px rgba(133, 89, 53, 0.22);
@@ -1018,10 +1279,6 @@ body[data-time="night"] .post-tag {
 .discussion-panel {
   min-height: 420px;
   background: linear-gradient(180deg, rgba(250, 242, 233, 0.9), rgba(238, 226, 214, 0.78));
-}
-
-.topic-card {
-  cursor: pointer;
 }
 
 .topic-card-empty,
@@ -1820,10 +2077,7 @@ body[data-time="night"] .newsletter-editorial {
     right: 0.8rem;
   }
 
-  .music-toggle {
-    right: 0.8rem;
-    bottom: 0.8rem;
-  }
+  /* .music-toggle replaced by .music-widget — handled in widget responsive section */
 
   .theme-orb {
     right: 0.8rem;
@@ -2401,6 +2655,394 @@ body[data-time="night"] .post-comment-content::placeholder {
 
 [data-time="night"] .post-comment-error {
   color: #ff7675;
+}
+
+/* ──────────────────────────────────────────
+   话题讨论区 Discussion Module v2
+   ────────────────────────────────────────── */
+
+/* ── Keyframes ─────────────────────────────── */
+@keyframes disc-comment-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes disc-panel-in {
+  from { opacity: 0; transform: translateX(18px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes disc-submit-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(203, 93, 59, 0.35); }
+  50%       { box-shadow: 0 0 0 8px rgba(203, 93, 59, 0); }
+}
+
+/* ── Panel entrance ─────────────────────────── */
+.disc-panel-enter {
+  animation: disc-panel-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ── Comment cards (discussion) ─────────────── */
+.disc-comment-card {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.1rem;
+  background: rgba(255, 252, 248, 0.82);
+  backdrop-filter: blur(6px);
+  animation: disc-comment-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: box-shadow 180ms ease, transform 180ms ease;
+}
+
+.disc-comment-card:hover {
+  box-shadow: 0 4px 18px rgba(100, 55, 30, 0.1);
+  transform: translateY(-1px);
+}
+
+body[data-time="night"] .disc-comment-card {
+  background: rgba(36, 32, 50, 0.72);
+  border-color: rgba(216, 205, 255, 0.1);
+}
+
+/* ── Avatar ─────────────────────────────────── */
+.disc-comment-avatar {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--gold));
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0;
+  user-select: none;
+  box-shadow: 0 2px 6px rgba(203, 93, 59, 0.28);
+}
+
+body[data-time="night"] .disc-comment-avatar {
+  background: linear-gradient(135deg, #6b4fbb, #3a2e7a);
+  box-shadow: 0 2px 8px rgba(100, 70, 200, 0.4);
+}
+
+/* ── Comment body ───────────────────────────── */
+.disc-comment-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.disc-comment-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin-bottom: 0.42rem;
+  flex-wrap: wrap;
+}
+
+.disc-comment-author {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+body[data-time="night"] .disc-comment-author { color: #e8e0ff; }
+
+.disc-comment-time {
+  font-size: 0.78rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+body[data-time="night"] .disc-comment-time { color: rgba(216, 205, 255, 0.5); }
+
+.disc-comment-text {
+  font-size: 0.94rem;
+  line-height: 1.7;
+  color: var(--ink);
+  margin: 0;
+  word-break: break-word;
+}
+
+body[data-time="night"] .disc-comment-text { color: rgba(240, 235, 255, 0.82); }
+
+/* ── Empty state ────────────────────────────── */
+.disc-comments-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 2rem 1rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+  text-align: center;
+}
+
+.disc-empty-icon {
+  font-size: 2rem;
+  opacity: 0.6;
+}
+
+body[data-time="night"] .disc-comments-empty { color: rgba(216, 205, 255, 0.45); }
+
+/* ── Form redesign ──────────────────────────── */
+.disc-comment-form {
+  display: grid;
+  gap: 0.85rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line);
+  margin-top: 0.4rem;
+}
+
+/* Mode row (匿名/实名 pill toggle) */
+.disc-mode-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.disc-mode-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+}
+
+.disc-mode-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.disc-mode-option span {
+  display: inline-block;
+  padding: 0.3rem 0.95rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--muted);
+  background: transparent;
+  transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
+}
+
+.disc-mode-option input[type="radio"]:checked + span {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: rgba(203, 93, 59, 0.08);
+}
+
+body[data-time="night"] .disc-mode-option span {
+  border-color: rgba(216, 205, 255, 0.18);
+  color: rgba(216, 205, 255, 0.5);
+}
+
+body[data-time="night"] .disc-mode-option input[type="radio"]:checked + span {
+  border-color: #a98dff;
+  color: #c8b5ff;
+  background: rgba(140, 100, 255, 0.12);
+}
+
+/* Author input */
+.disc-author-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  border: 1.5px solid var(--line);
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.94rem;
+  box-sizing: border-box;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.disc-author-input.hidden { display: none; }
+
+.disc-author-input::placeholder { color: #9c7c68; }
+
+.disc-author-input:focus {
+  outline: none;
+  border-color: rgba(203, 93, 59, 0.5);
+  box-shadow: 0 0 0 3px rgba(203, 93, 59, 0.12);
+}
+
+body[data-time="night"] .disc-author-input {
+  background: rgba(255, 255, 255, 0.06);
+  color: #f0ebff;
+  border-color: rgba(216, 205, 255, 0.16);
+}
+
+body[data-time="night"] .disc-author-input::placeholder { color: rgba(216, 205, 255, 0.38); }
+body[data-time="night"] .disc-author-input:focus { border-color: rgba(160, 130, 255, 0.55); box-shadow: 0 0 0 3px rgba(140, 100, 255, 0.14); }
+
+/* Textarea wrap + char counter */
+.disc-textarea-wrap {
+  position: relative;
+}
+
+.disc-textarea-wrap textarea {
+  width: 100%;
+  padding: 0.85rem 1rem 2rem;
+  border-radius: 14px;
+  border: 1.5px solid var(--line);
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.94rem;
+  resize: vertical;
+  min-height: 80px;
+  box-sizing: border-box;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+  line-height: 1.65;
+}
+
+.disc-textarea-wrap textarea::placeholder { color: #9c7c68; }
+
+.disc-textarea-wrap textarea:focus {
+  outline: none;
+  border-color: rgba(203, 93, 59, 0.5);
+  box-shadow: 0 0 0 3px rgba(203, 93, 59, 0.12);
+}
+
+body[data-time="night"] .disc-textarea-wrap textarea {
+  background: rgba(255, 255, 255, 0.06);
+  color: #f0ebff;
+  border-color: rgba(216, 205, 255, 0.16);
+}
+
+body[data-time="night"] .disc-textarea-wrap textarea::placeholder { color: rgba(216, 205, 255, 0.38); }
+body[data-time="night"] .disc-textarea-wrap textarea:focus { border-color: rgba(160, 130, 255, 0.55); box-shadow: 0 0 0 3px rgba(140, 100, 255, 0.14); }
+
+.disc-char-count {
+  position: absolute;
+  bottom: 0.52rem;
+  right: 0.85rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+  pointer-events: none;
+  transition: color 160ms ease;
+  opacity: 0.7;
+}
+
+.disc-char-count.disc-char-over {
+  color: #c0392b;
+  opacity: 1;
+  font-weight: 700;
+}
+
+body[data-time="night"] .disc-char-count { color: rgba(216, 205, 255, 0.38); }
+
+/* Form footer (button + error msg) */
+.disc-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.disc-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.62rem 1.4rem;
+  border-radius: 999px;
+  border: none;
+  background: var(--primary);
+  color: #fff;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 180ms ease, transform 120ms ease, box-shadow 180ms ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.disc-submit-btn:hover:not(:disabled) {
+  background: var(--primary-deep);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(203, 93, 59, 0.32);
+}
+
+.disc-submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.disc-submit-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.disc-submit-btn.is-loading {
+  animation: disc-submit-pulse 1.2s ease infinite;
+}
+
+.disc-submit-arrow {
+  font-size: 1rem;
+  transition: transform 200ms ease;
+  display: inline-block;
+}
+
+.disc-submit-btn:hover .disc-submit-arrow {
+  transform: translateX(4px);
+}
+
+body[data-time="night"] .disc-submit-btn {
+  background: linear-gradient(135deg, #6b4fbb, #9568e0);
+}
+
+body[data-time="night"] .disc-submit-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #7c5ccc, #a87af0);
+  box-shadow: 0 4px 16px rgba(100, 70, 200, 0.4);
+}
+
+.disc-message {
+  font-size: 0.82rem;
+  margin: 0;
+  flex: 1;
+  text-align: left;
+}
+
+.disc-message-error {
+  color: #c0392b;
+}
+
+body[data-time="night"] .disc-message-error { color: #ff7675; }
+
+/* ── Topic card improvements ─────────────────── */
+.topic-card {
+  cursor: pointer;
+  transition: box-shadow 180ms ease, transform 180ms ease, border-color 200ms ease;
+  border-left: 3px solid transparent;
+}
+
+.topic-card:hover:not(.is-active) {
+  transform: translateX(3px);
+  border-left-color: rgba(203, 93, 59, 0.3);
+  box-shadow: 0 4px 16px rgba(100, 55, 30, 0.1);
+}
+
+.topic-card.is-active {
+  border-left-color: var(--primary) !important;
+  box-shadow: 0 6px 24px rgba(133, 89, 53, 0.14);
+}
+
+body[data-time="night"] .topic-card.is-active {
+  border-left-color: #a98dff !important;
+  box-shadow: 0 6px 24px rgba(80, 50, 160, 0.28);
+}
+
+body[data-time="night"] .topic-card:hover:not(.is-active) {
+  border-left-color: rgba(160, 130, 255, 0.35);
 }
 
 /* ──────────────────────────────────────────

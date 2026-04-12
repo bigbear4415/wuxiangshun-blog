@@ -20,7 +20,7 @@ const discussionDescription = document.querySelector("#discussion-description");
 const commentsList = document.querySelector("#comments-list");
 const commentForm = document.querySelector("#comment-form");
 const commentAuthor = document.querySelector("#comment-author");
-const commentAnonymous = document.querySelector("#comment-anonymous");
+// commentAnonymous: removed — replaced by disc-mode radio buttons
 const commentMessage = document.querySelector("#comment-message");
 
 // ── Toast 通知系统 ─────────────────────────────────────────
@@ -161,6 +161,8 @@ let runtimeConfig = { pollingIntervalMs: 15000 };
 let pollTimer = null;
 let introMusicReady = false;
 let introMusicEnabled = true;
+let musicTracks = [];        // { name, url }[]
+let currentTrackIdx = 0;
 let activeThemePreset = "warm";
 const rootStyle = document.documentElement.style;
 const DETAIL_TRANSITION_KEY = "blog-detail-transition";
@@ -431,25 +433,26 @@ const openIntro = () => {
 
     try {
       const response = await fetch("/api/music");
-      if (!response.ok) {
-        throw new Error("music endpoint unavailable");
-      }
+      if (!response.ok) throw new Error("music endpoint unavailable");
 
       const tracks = await response.json();
-      if (!tracks.length) {
-        throw new Error("no deployed tracks");
-      }
+      if (!tracks.length) throw new Error("no deployed tracks");
 
-      introAudio.src = tracks[0].url;
+      musicTracks = tracks;
+      currentTrackIdx = 0;
+      introAudio.src = musicTracks[0].url;
       introMusicReady = true;
     } catch {
       const fallbackSrc = introAudio.dataset.fallbackSrc;
       if (fallbackSrc) {
+        musicTracks = [{ name: "默认曲目", url: fallbackSrc }];
+        currentTrackIdx = 0;
         introAudio.src = fallbackSrc;
         introMusicReady = true;
       }
     }
 
+    renderMusicTrackList();
     syncMusicToggle();
   };
 
@@ -484,14 +487,84 @@ const openIntro = () => {
   introScreen.addEventListener("click", handleEnter);
 };
 
-const syncMusicToggle = () => {
-  if (!musicToggle) {
+// ── 音乐播放器工具 Music Player Helpers ──────────────────────
+const formatTrackName = (rawName) => {
+  // 去掉扩展名
+  let name = rawName.replace(/\.[^.]+$/, "");
+  // 如果是 Supabase 随机文件名（obj_...长哈希），截短显示
+  if (/^obj_\w{8,}/.test(name) || name.length > 60) {
+    return name.slice(0, 30) + "…";
+  }
+  return name;
+};
+
+const renderMusicTrackList = () => {
+  const listEl = document.querySelector("#music-track-list");
+  if (!listEl) return;
+
+  if (!musicTracks.length) {
+    listEl.innerHTML = `<p class="music-track-empty">暂无曲目</p>`;
     return;
   }
 
-  musicToggle.classList.toggle("hidden", !introMusicReady);
-  musicToggle.textContent = introMusicEnabled ? "音乐已开" : "音乐已关";
-  musicToggle.setAttribute("aria-pressed", introMusicEnabled ? "true" : "false");
+  listEl.innerHTML = musicTracks.map((track, i) => `
+    <button
+      class="music-track-item ${i === currentTrackIdx ? "is-active" : ""}"
+      data-track-idx="${i}"
+      type="button"
+      title="${track.name}"
+    >
+      <span class="music-track-icon" aria-hidden="true">${i === currentTrackIdx ? "▶" : "♩"}</span>
+      <span class="music-track-name">${formatTrackName(track.name)}</span>
+      ${i === currentTrackIdx ? '<span class="music-track-badge">播放中</span>' : ""}
+    </button>
+  `).join("");
+
+  // 点击切歌
+  listEl.querySelectorAll(".music-track-item").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const idx = Number(btn.dataset.trackIdx);
+      if (idx === currentTrackIdx && introMusicEnabled) return;
+
+      currentTrackIdx = idx;
+      const track = musicTracks[idx];
+      introAudio.src = track.url;
+      introAudio.currentTime = 0;
+
+      if (!introMusicEnabled) {
+        introMusicEnabled = true;
+      }
+
+      try {
+        introAudio.volume = 0.55;
+        await introAudio.play();
+      } catch { /* ignore */ }
+
+      renderMusicTrackList();
+      syncMusicToggle();
+    });
+  });
+};
+
+const syncMusicToggle = () => {
+  const widget = document.querySelector("#music-widget");
+  if (!widget) return;
+
+  widget.classList.toggle("hidden", !introMusicReady);
+
+  const discEl = document.querySelector("#music-disc");
+  const labelEl = document.querySelector("#music-play-label");
+  const btn = document.querySelector("#music-toggle");
+
+  if (discEl) discEl.classList.toggle("is-spinning", introMusicEnabled);
+  if (labelEl) {
+    const trackName = musicTracks[currentTrackIdx]
+      ? formatTrackName(musicTracks[currentTrackIdx].name)
+      : "音乐";
+    labelEl.textContent = introMusicEnabled ? trackName : "已暂停";
+  }
+  if (btn) btn.setAttribute("aria-pressed", introMusicEnabled ? "true" : "false");
 };
 
 const observeRevealItems = () => {
@@ -650,32 +723,40 @@ const renderPosts = (posts) => {
   bindAdaptiveVideoFrames(postsContainer);
 };
 
-const renderComments = (comments) => {
+const renderComments = (comments, animate = false) => {
   if (!commentsList) {
     return;
   }
 
   if (!comments.length) {
     commentsList.innerHTML = `
-      <article class="comment-card">
-        <p class="post-meta">还没有留言</p>
-        <p>成为第一个参与这个话题的人吧。</p>
-      </article>
+      <div class="disc-comments-empty">
+        <span class="disc-empty-icon">💬</span>
+        <p>还没有留言，来说第一句话吧。</p>
+      </div>
     `;
     return;
   }
 
   commentsList.innerHTML = comments
     .map(
-      (comment) => `
-        <article class="comment-card">
-          <div class="comment-header">
-            <strong>${comment.isAnonymous ? "匿名用户" : comment.authorName}</strong>
-            <span>${formatDateTime(comment.createdAt)}</span>
-          </div>
-          <p>${comment.content}</p>
-        </article>
-      `
+      (comment, i) => {
+        const name = comment.isAnonymous ? "匿名读者" : (comment.authorName || "读者");
+        const initial = name[0].toUpperCase();
+        const delay = animate ? `${i * 0.07}s` : "0s";
+        return `
+          <article class="comment-card disc-comment-card" style="animation-delay:${delay}">
+            <div class="disc-comment-avatar" aria-hidden="true">${comment.isAnonymous ? "?" : initial}</div>
+            <div class="disc-comment-body">
+              <div class="disc-comment-meta">
+                <strong class="disc-comment-author">${name}</strong>
+                <span class="disc-comment-time">${formatDateTime(comment.createdAt)}</span>
+              </div>
+              <p class="disc-comment-text">${comment.content.replace(/\n/g, "<br>")}</p>
+            </div>
+          </article>
+        `;
+      }
     )
     .join("");
 };
@@ -683,11 +764,20 @@ const renderComments = (comments) => {
 const showTopicDetail = (topic) => {
   currentTopicId = topic.id;
   discussionEmpty?.classList.add("hidden");
-  discussionDetail?.classList.remove("hidden");
-  discussionMeta.textContent = `${formatDate(topic.publishedAt)} - ${topic.comments.length} 条留言`;
-  discussionTitle.textContent = topic.title;
-  discussionDescription.textContent = topic.description;
-  renderComments(topic.comments || []);
+
+  const detail = discussionDetail;
+  if (detail) {
+    detail.classList.remove("hidden");
+    // Trigger slide-in animation each time topic changes
+    detail.classList.remove("disc-panel-enter");
+    void detail.offsetWidth; // reflow
+    detail.classList.add("disc-panel-enter");
+  }
+
+  if (discussionMeta) discussionMeta.textContent = `${formatDate(topic.publishedAt)} · ${topic.comments.length} 条留言`;
+  if (discussionTitle) discussionTitle.textContent = topic.title;
+  if (discussionDescription) discussionDescription.textContent = topic.description;
+  renderComments(topic.comments || [], true);
 
   topicsList?.querySelectorAll(".topic-card").forEach((card) => {
     card.classList.toggle("is-active", card.dataset.topicId === topic.id);
@@ -837,17 +927,30 @@ topicsList?.addEventListener("click", (event) => {
   }
 });
 
-commentAnonymous?.addEventListener("change", () => {
-  if (commentAnonymous.checked) {
-    commentAuthor.value = "";
-    commentAuthor.disabled = true;
-    commentAuthor.placeholder = "匿名留言时不需要填写昵称";
-  } else {
-    commentAuthor.disabled = false;
-    commentAuthor.placeholder = "请输入你的昵称";
+// ── 讨论区：匿名/实名切换 ─────────────────────────────────
+const discModeRadios = document.querySelectorAll("input[name='discussion-mode']");
+const discAuthorInput = document.querySelector("#comment-author");
+
+const syncDiscMode = () => {
+  const isAnon = document.querySelector("input[name='discussion-mode']:checked")?.value === "anon";
+  if (discAuthorInput) {
+    discAuthorInput.classList.toggle("hidden", isAnon);
+    if (isAnon) discAuthorInput.value = "";
   }
-});
-commentAnonymous?.dispatchEvent(new Event("change"));
+};
+discModeRadios.forEach((r) => r.addEventListener("change", syncDiscMode));
+syncDiscMode();
+
+// ── 讨论区：字符计数 ──────────────────────────────────────
+const discContentInput = document.querySelector("#comment-content");
+const discCharCount = document.querySelector("#disc-char-count");
+if (discContentInput && discCharCount) {
+  discContentInput.addEventListener("input", () => {
+    const len = discContentInput.value.length;
+    discCharCount.textContent = `${len} / 500`;
+    discCharCount.classList.toggle("disc-char-over", len >= 480);
+  });
+}
 
 commentForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -857,11 +960,23 @@ commentForm?.addEventListener("submit", async (event) => {
     return;
   }
 
-  const payload = {
-    authorName: commentAuthor.value.trim(),
-    isAnonymous: commentAnonymous.checked,
-    content: document.querySelector("#comment-content").value.trim()
-  };
+  const isAnon = document.querySelector("input[name='discussion-mode']:checked")?.value === "anon";
+  const content = (discContentInput?.value || "").trim();
+  const authorName = (discAuthorInput?.value || "").trim();
+
+  if (!content) return;
+  if (!isAnon && !authorName) {
+    discAuthorInput?.focus();
+    return;
+  }
+
+  const submitBtn = commentForm.querySelector(".disc-submit-btn");
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.classList.add("is-loading"); }
+
+  const discMessage = document.querySelector("#comment-message");
+  if (discMessage) { discMessage.textContent = ""; discMessage.className = "disc-message"; }
+
+  const payload = { authorName, isAnonymous: isAnon, content };
 
   try {
     const response = await fetch(`/api/topics/${currentTopicId}/comments`, {
@@ -870,18 +985,23 @@ commentForm?.addEventListener("submit", async (event) => {
       body: JSON.stringify(payload)
     });
 
-    const result = await response.json();
-    if (!response.ok) {
-      throw new Error(result.message || "留言失败");
-    }
+    let result = {};
+    try { result = await response.json(); } catch { /* non-JSON */ }
+    if (!response.ok) throw new Error(result.message || "留言失败");
 
     showToast("留言成功，已发布到讨论区 ✓", "success");
     commentForm.reset();
-    commentAnonymous.checked = true;
-    commentAnonymous.dispatchEvent(new Event("change"));
+    if (discCharCount) discCharCount.textContent = "0 / 500";
+    const anonRadio = document.querySelector("input[name='discussion-mode'][value='anon']");
+    if (anonRadio) { anonRadio.checked = true; syncDiscMode(); }
     await loadTopics();
   } catch (error) {
-    showToast(error.message || "留言失败，请稍后重试", "error");
+    if (discMessage) {
+      discMessage.textContent = error.message || "留言失败，请稍后重试";
+      discMessage.classList.add("disc-message-error");
+    }
+  } finally {
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.classList.remove("is-loading"); }
   }
 });
 
@@ -900,9 +1020,7 @@ form?.addEventListener("submit", (event) => {
 });
 
 musicToggle?.addEventListener("click", async () => {
-  if (!introAudio || !introMusicReady) {
-    return;
-  }
+  if (!introAudio || !introMusicReady) return;
 
   introMusicEnabled = !introMusicEnabled;
   syncMusicToggle();

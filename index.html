@@ -36,7 +36,21 @@
     loop
     data-fallback-src="/assets/audio/the-fun-side-of-life-bireli-snow.mp3"
   ></audio>
-  <button class="music-toggle hidden" id="music-toggle" type="button" aria-pressed="true">音乐已开</button>
+  <!-- ── 音乐播放器 Music Widget ─────────────────────────── -->
+  <div class="music-widget hidden" id="music-widget">
+    <div class="music-dropdown" id="music-dropdown" role="listbox" aria-label="选择曲目">
+      <p class="music-dropdown-title">🎵 选择曲目</p>
+      <div class="music-track-list" id="music-track-list">
+        <p class="music-track-loading">加载中…</p>
+      </div>
+    </div>
+    <button class="music-play-btn" id="music-toggle" type="button" aria-pressed="false" aria-label="播放 / 暂停音乐">
+      <span class="music-disc-wrap" aria-hidden="true">
+        <span class="music-disc" id="music-disc">◉</span>
+      </span>
+      <span class="music-play-label" id="music-play-label">音乐</span>
+    </button>
+  </div>
   <button class="theme-orb" id="theme-orb" type="button" aria-expanded="false" aria-controls="theme-panel">色调</button>
   <section class="theme-panel hidden" id="theme-panel" aria-label="界面色调调节">
     <p class="mini-title">界面调色板</p>
@@ -155,25 +169,35 @@
 
           <div class="comments-list" id="comments-list"></div>
 
-          <form class="comment-form" id="comment-form">
-            <label>
-              <span>你的昵称</span>
-              <input id="comment-author" name="authorName" type="text" placeholder="不匿名时显示的名字">
-            </label>
-
-            <label class="comment-anonymous-toggle">
-              <input id="comment-anonymous" name="isAnonymous" type="checkbox" checked>
-              <span>匿名留言</span>
-            </label>
-
-            <label>
-              <span>留言内容</span>
-              <textarea id="comment-content" name="content" rows="5" placeholder="写下你对这个话题的看法" required></textarea>
-            </label>
-
-            <div class="admin-actions admin-actions-spread">
-              <button class="button button-primary" type="submit">发布留言</button>
-              <p class="admin-message" id="comment-message" aria-live="polite"></p>
+          <form class="disc-comment-form" id="comment-form">
+            <div class="disc-mode-row">
+              <label class="disc-mode-option">
+                <input type="radio" name="discussion-mode" value="anon" checked>
+                <span>匿名</span>
+              </label>
+              <label class="disc-mode-option">
+                <input type="radio" name="discussion-mode" value="named">
+                <span>实名</span>
+              </label>
+            </div>
+            <input
+              class="disc-author-input hidden"
+              id="comment-author"
+              name="authorName"
+              type="text"
+              placeholder="你的昵称"
+              autocomplete="nickname"
+            >
+            <div class="disc-textarea-wrap">
+              <textarea id="comment-content" name="content" rows="3" placeholder="写下你对这个话题的看法……" required maxlength="500"></textarea>
+              <span class="disc-char-count" id="disc-char-count">0 / 500</span>
+            </div>
+            <div class="disc-form-footer">
+              <button class="disc-submit-btn" type="submit">
+                <span>发布留言</span>
+                <span class="disc-submit-arrow" aria-hidden="true">→</span>
+              </button>
+              <p class="disc-message" id="comment-message" aria-live="polite"></p>
             </div>
           </form>
         </div>
