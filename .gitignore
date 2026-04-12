@@ -2,7 +2,6 @@
 .env
 node_modules/
 data/config.json
-music/
 awesome-design/
 data/post-comments.json
 data/post-likes.json

@@ -178,6 +178,81 @@
         <div id="admin-topics" class="admin-posts"></div>
       </section>
     </section>
+
+    <!-- ── 音乐管理 Music Management ─────────────────────── -->
+    <section class="admin-panel hidden" id="music-layout">
+      <div class="admin-header">
+        <div>
+          <p class="eyebrow">音乐管理</p>
+          <h1>上传音乐到播放器</h1>
+          <p class="admin-text">本地运行后台时，可以把音乐文件直接写入项目的 music 文件夹。支持 MP3、WAV、OGG、M4A、AAC 格式，单文件最大 50MB。</p>
+        </div>
+      </div>
+
+      <div class="admin-inline-note" id="music-mode-note">
+        当前正在检测运行环境…
+      </div>
+
+      <form class="admin-form" id="music-upload-form" enctype="multipart/form-data">
+        <div class="music-upload-area" id="music-drop-area">
+          <div class="music-upload-icon" aria-hidden="true">🎵</div>
+          <p class="music-upload-hint">将音乐文件拖到这里，或者</p>
+          <label class="button button-primary button-small music-upload-choose">
+            选择音乐文件
+            <input type="file" name="music" id="music-file-input" accept=".mp3,.wav,.ogg,.m4a,.aac" multiple hidden>
+          </label>
+          <p class="music-upload-sub">最多同时上传 10 个文件</p>
+        </div>
+
+        <div class="music-upload-queue hidden" id="music-upload-queue">
+          <p class="mini-title" id="music-queue-label">已选择 0 个文件</p>
+          <div class="music-queue-list" id="music-queue-list"></div>
+          <div class="admin-actions admin-actions-spread">
+            <button class="button button-primary" id="music-upload-btn" type="submit">开始上传</button>
+            <button class="button button-secondary" id="music-clear-btn" type="button">清空</button>
+            <p class="admin-message" id="music-upload-message" aria-live="polite"></p>
+          </div>
+        </div>
+      </form>
+
+      <div class="music-library-section">
+        <div class="admin-header">
+          <div>
+            <p class="eyebrow">曲库</p>
+            <h2>当前已有的音乐文件</h2>
+          </div>
+        </div>
+        <div class="music-library-list" id="music-library-list">
+          <p class="admin-text">加载中…</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="admin-panel hidden" id="repo-tools-layout">
+      <div class="admin-header">
+        <div>
+          <p class="eyebrow">本地发布工具</p>
+          <h1>一键提交并推送到 GitHub</h1>
+          <p class="admin-text">只在你本机运行博客服务时可用。按钮会自动执行 git add、commit、push，让 Vercel 拉取最新代码部署。</p>
+        </div>
+      </div>
+
+      <div class="admin-inline-note" id="repo-mode-note">
+        当前正在检测运行环境…
+      </div>
+
+      <form class="admin-form compact-form" id="git-push-form">
+        <label>
+          <span>提交说明</span>
+          <input id="git-commit-message" name="message" type="text" placeholder="例如：后台更新首页文案" />
+        </label>
+
+        <div class="admin-actions admin-actions-spread">
+          <button class="button button-primary" id="git-push-btn" type="submit">一键 git push</button>
+          <p class="admin-message" id="git-push-message" aria-live="polite"></p>
+        </div>
+      </form>
+    </section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

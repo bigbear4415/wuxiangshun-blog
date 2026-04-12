@@ -23,6 +23,7 @@ const adminTopics = document.querySelector("#admin-topics");
 const topicEditorTitle = document.querySelector("#topic-editor-title");
 const topicSubmitButton = document.querySelector("#topic-submit-button");
 const topicCancelEditButton = document.querySelector("#topic-cancel-edit-button");
+const repoToolsLayout = document.querySelector("#repo-tools-layout");
 
 let editingPostId = "";
 let keepImage = true;
@@ -32,7 +33,10 @@ let runtimeConfig = {
   storageMode: "local",
   supabaseUrl: "",
   supabaseAnonKey: "",
-  supabaseStorageBucket: "blog-media"
+  supabaseStorageBucket: "blog-media",
+  localMusicUploadEnabled: true,
+  localGitPushEnabled: true,
+  runningOnVercel: false
 };
 let supabaseClient = null;
 const resumableUploadThresholdBytes = 6 * 1024 * 1024;
@@ -59,10 +63,13 @@ const formatDate = (dateString) => {
   }).format(date);
 };
 
+const musicLayout = document.querySelector("#music-layout");
 const setAuthenticatedView = (authenticated) => {
   loginPanel?.classList.toggle("hidden", authenticated);
   adminLayout?.classList.toggle("hidden", !authenticated);
   topicsLayout?.classList.toggle("hidden", !authenticated);
+  musicLayout?.classList.toggle("hidden", !authenticated);
+  repoToolsLayout?.classList.toggle("hidden", !authenticated);
 };
 
 const resetMediaState = () => {
@@ -210,8 +217,29 @@ const loadRuntimeConfig = async () => {
         auth: { persistSession: false }
       });
     }
+
+    syncLocalFeatureNotes();
   } catch (error) {
     loginMessage.textContent = error.message;
+  }
+};
+
+const syncLocalFeatureNotes = () => {
+  const musicModeNote = document.querySelector("#music-mode-note");
+  const repoModeNote = document.querySelector("#repo-mode-note");
+
+  if (musicModeNote) {
+    musicModeNote.textContent = runtimeConfig.localMusicUploadEnabled
+      ? "当前是本地运行模式：上传的音乐文件会直接写入项目的 music 文件夹。"
+      : "当前是线上运行模式：这里不能把文件写回你电脑上的 music 文件夹。请在本地启动博客服务后再上传。";
+    musicModeNote.classList.toggle("is-warning", !runtimeConfig.localMusicUploadEnabled);
+  }
+
+  if (repoModeNote) {
+    repoModeNote.textContent = runtimeConfig.localGitPushEnabled
+      ? "当前是本地运行模式：按钮会在本机项目目录执行 git add、commit、push。"
+      : "当前是线上运行模式：这里不能替你操作本机 Git。请在本地启动博客服务后使用这个按钮。";
+    repoModeNote.classList.toggle("is-warning", !runtimeConfig.localGitPushEnabled);
   }
 };
 
@@ -478,7 +506,7 @@ const checkAuthStatus = async () => {
     setAuthenticatedView(result.authenticated);
 
     if (result.authenticated) {
-      await Promise.all([loadAdminPosts(), loadAdminTopics()]);
+      await Promise.all([loadAdminPosts(), loadAdminTopics(), loadMusicLibrary()]);
     }
   } catch {
     setAuthenticatedView(false);
@@ -507,7 +535,7 @@ loginForm?.addEventListener("submit", async (event) => {
     setAuthenticatedView(true);
     resetEditor();
     resetTopicEditor();
-    await Promise.all([loadAdminPosts(), loadAdminTopics()]);
+    await Promise.all([loadAdminPosts(), loadAdminTopics(), loadMusicLibrary()]);
   } catch (error) {
     loginMessage.textContent = error.message;
   }
@@ -682,11 +710,233 @@ logoutButton?.addEventListener("click", async () => {
   }
 });
 
+// ── 音乐管理 Music Management ──────────────────────────────
+const musicUploadForm = document.querySelector("#music-upload-form");
+const musicFileInput = document.querySelector("#music-file-input");
+const musicDropArea = document.querySelector("#music-drop-area");
+const musicUploadQueue = document.querySelector("#music-upload-queue");
+const musicQueueList = document.querySelector("#music-queue-list");
+const musicQueueLabel = document.querySelector("#music-queue-label");
+const musicUploadBtn = document.querySelector("#music-upload-btn");
+const musicClearBtn = document.querySelector("#music-clear-btn");
+const musicUploadMessage = document.querySelector("#music-upload-message");
+const musicLibraryList = document.querySelector("#music-library-list");
+const musicModeNote = document.querySelector("#music-mode-note");
+const gitPushForm = document.querySelector("#git-push-form");
+const gitCommitMessage = document.querySelector("#git-commit-message");
+const gitPushBtn = document.querySelector("#git-push-btn");
+const gitPushMessage = document.querySelector("#git-push-message");
+
+let pendingMusicFiles = [];
+
+const formatTrackNameAdmin = (rawName) => {
+  return rawName.replace(/\.[^.]+$/, "");
+};
+
+const formatFileSize = (bytes) => {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+const syncMusicQueue = () => {
+  if (!pendingMusicFiles.length) {
+    musicUploadQueue?.classList.add("hidden");
+    return;
+  }
+
+  musicUploadQueue?.classList.remove("hidden");
+  if (musicQueueLabel) musicQueueLabel.textContent = `已选择 ${pendingMusicFiles.length} 个文件`;
+
+  if (musicQueueList) {
+    musicQueueList.innerHTML = pendingMusicFiles.map((f, i) => `
+      <div class="music-queue-item">
+        <span class="music-queue-icon">♩</span>
+        <span class="music-queue-name">${formatTrackNameAdmin(f.name)}</span>
+        <span class="music-queue-size">${formatFileSize(f.size)}</span>
+        <button class="music-queue-remove" type="button" data-queue-idx="${i}" title="移除">✕</button>
+      </div>
+    `).join("");
+
+    musicQueueList.querySelectorAll(".music-queue-remove").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const idx = Number(btn.dataset.queueIdx);
+        pendingMusicFiles.splice(idx, 1);
+        syncMusicQueue();
+      });
+    });
+  }
+};
+
+const loadMusicLibrary = async () => {
+  if (!musicLibraryList) return;
+
+  if (!runtimeConfig.localMusicUploadEnabled) {
+    musicLibraryList.innerHTML = `<p class="admin-text">线上环境不会读取你电脑里的 music 文件夹，所以这里不会显示本地曲库。请在本地运行后台时使用这个功能。</p>`;
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/music");
+    if (!response.ok) throw new Error();
+
+    const tracks = await response.json();
+
+    if (!tracks.length) {
+      musicLibraryList.innerHTML = `<p class="admin-text">曲库为空，上传一些音乐文件吧。</p>`;
+      return;
+    }
+
+    musicLibraryList.innerHTML = tracks.map((track) => `
+      <div class="music-lib-item">
+        <span class="music-lib-icon">🎵</span>
+        <div class="music-lib-info">
+          <span class="music-lib-name">${formatTrackNameAdmin(track.name)}</span>
+          <audio class="music-lib-preview" controls preload="none" src="${track.url}"></audio>
+        </div>
+        <button class="button button-secondary button-small danger-button music-lib-delete" type="button" data-filename="${encodeURIComponent(track.name)}">删除</button>
+      </div>
+    `).join("");
+
+    musicLibraryList.querySelectorAll(".music-lib-delete").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const filename = btn.dataset.filename;
+        if (!window.confirm(`确定要删除这个音乐文件吗？`)) return;
+
+        try {
+          const response = await fetch(`/api/music/${filename}`, { method: "DELETE" });
+          const result = await parseResponsePayload(response);
+          if (!response.ok) throw new Error(result.message || "删除失败");
+          await loadMusicLibrary();
+        } catch (error) {
+          if (musicUploadMessage) musicUploadMessage.textContent = error.message;
+        }
+      });
+    });
+  } catch {
+    musicLibraryList.innerHTML = `<p class="admin-text">加载曲库失败，请刷新页面重试。</p>`;
+  }
+};
+
+// 文件选择
+musicFileInput?.addEventListener("change", () => {
+  const files = Array.from(musicFileInput.files || []);
+  pendingMusicFiles = [...pendingMusicFiles, ...files].slice(0, 10);
+  musicFileInput.value = "";
+  syncMusicQueue();
+});
+
+// 拖放
+if (musicDropArea) {
+  ["dragenter", "dragover"].forEach((evt) => {
+    musicDropArea.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); musicDropArea.classList.add("is-dragover"); });
+  });
+  ["dragleave", "drop"].forEach((evt) => {
+    musicDropArea.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); musicDropArea.classList.remove("is-dragover"); });
+  });
+  musicDropArea.addEventListener("drop", (e) => {
+    const files = Array.from(e.dataTransfer?.files || []).filter((f) => /\.(mp3|wav|ogg|m4a|aac)$/i.test(f.name));
+    pendingMusicFiles = [...pendingMusicFiles, ...files].slice(0, 10);
+    syncMusicQueue();
+  });
+}
+
+// 清空
+musicClearBtn?.addEventListener("click", () => {
+  pendingMusicFiles = [];
+  syncMusicQueue();
+  if (musicUploadMessage) musicUploadMessage.textContent = "";
+});
+
+// 上传
+musicUploadForm?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!pendingMusicFiles.length) return;
+
+  if (!runtimeConfig.localMusicUploadEnabled) {
+    if (musicUploadMessage) musicUploadMessage.textContent = "当前是线上运行环境，不能把音乐文件写入你本机的 music 文件夹。";
+    return;
+  }
+
+  if (musicUploadBtn) { musicUploadBtn.disabled = true; musicUploadBtn.textContent = "上传中…"; }
+  if (musicUploadMessage) musicUploadMessage.textContent = "";
+
+  try {
+    const formData = new FormData();
+    pendingMusicFiles.forEach((f) => formData.append("music", f));
+
+    const response = await fetch("/api/music/upload", {
+      method: "POST",
+      body: formData
+    });
+
+    const result = await parseResponsePayload(response);
+    if (!response.ok) throw new Error(result.message || "上传失败");
+
+    if (musicUploadMessage) musicUploadMessage.textContent = result.message || "上传成功！";
+    pendingMusicFiles = [];
+    syncMusicQueue();
+    await loadMusicLibrary();
+  } catch (error) {
+    if (musicUploadMessage) musicUploadMessage.textContent = error.message;
+  } finally {
+    if (musicUploadBtn) { musicUploadBtn.disabled = false; musicUploadBtn.textContent = "开始上传"; }
+  }
+});
+
+gitPushForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  if (!runtimeConfig.localGitPushEnabled) {
+    if (gitPushMessage) gitPushMessage.textContent = "当前是线上运行环境，不能在这里执行本机 git push。";
+    return;
+  }
+
+  if (gitPushBtn) {
+    gitPushBtn.disabled = true;
+    gitPushBtn.textContent = "正在推送…";
+  }
+  if (gitPushMessage) {
+    gitPushMessage.textContent = "";
+  }
+
+  try {
+    const response = await fetch("/api/local-tools/git-push", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: gitCommitMessage?.value?.trim() || ""
+      })
+    });
+
+    const result = await parseResponsePayload(response);
+    if (!response.ok) {
+      throw new Error(result.message || "自动 git push 失败");
+    }
+
+    if (gitPushMessage) {
+      gitPushMessage.textContent = result.message || "推送成功。";
+    }
+
+    if (gitCommitMessage && result.committed) {
+      gitCommitMessage.value = "";
+    }
+  } catch (error) {
+    if (gitPushMessage) {
+      gitPushMessage.textContent = error.message;
+    }
+  } finally {
+    if (gitPushBtn) {
+      gitPushBtn.disabled = false;
+      gitPushBtn.textContent = "一键 git push";
+    }
+  }
+});
+
 const init = async () => {
   await loadRuntimeConfig();
   await checkAuthStatus();
 };
 
 init();
-
 
